@@ -1,0 +1,10 @@
+Source code associated to Cosade2023 submission:
+Software-only Control-Flow Integrity against Fault Injection Attacks
+
+Examples available:
+-Min_array(YACCA)
+-Memory functions (memset memcpy memcmp)
+
+Others examples coming later on
+-VerifyPin
+-ECDSA sign/verify

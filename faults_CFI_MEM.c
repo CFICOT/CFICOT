@@ -1,0 +1,537 @@
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include "faults.h"
+#include <stdbool.h>
+#include <stddef.h>
+
+#ifdef CFICOT
+#include "CFICOT.h"
+#include "build/faults_CFI_MEM.cfi.h"
+#endif
+
+typedef uint16_t ret_t;
+#define LENGTH 10
+#define c 0x55
+volatile uint16_t __attribute__((section(".CFI_F_Integrity"))) CFI_F_Integrity[5] = {0,0,0,0,0};
+const uint8_t ref1[3 * LENGTH] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, c, c, c, c, c, c, c, c, c, c, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
+const uint8_t ref2[3 * LENGTH] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x10, 0x11, 0x12, 0x13, 0x14, 0x20, 0x21, 0x22, 0x23, 0x24, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t a[3 * LENGTH] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0x10, 0x11, 0x12, 0x13, 0x14, 0x20, 0x21, 0x22, 0x23, 0x24, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+uint8_t b[3 * LENGTH] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0x10, 0x11, 0x12, 0x13, 0x18, 0x20, 0x21, 0x22, 0x23, 0x24, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
+uint8_t x[3 * LENGTH];
+volatile int OPcmp;
+
+#ifdef CFICOT
+typedef struct {
+	void *arr;
+	size_t arrsize;
+	uint16_t integrity;
+} array_descriptor;
+
+typedef struct {
+	array_descriptor *arr;
+	int cst;
+	uint16_t integrity;
+} mem_set_struct;
+
+typedef struct {
+	array_descriptor *arrdest;
+	array_descriptor *arrsource;
+	uint16_t integrity;
+} mem_cpy_struct;
+
+typedef struct {
+	array_descriptor *arr1;
+	array_descriptor *arr2;
+	volatile int *result;
+	uint16_t integrity;
+} mem_cmp_struct;
+
+typedef uint16_t (*memset_f)(mem_set_struct*);
+typedef uint16_t (*memcpy_f)(mem_cpy_struct*);
+typedef uint16_t (*memcmp_f)(mem_cmp_struct*);
+
+uint16_t __attribute__((noinline, noipa, noclone)) compute_integrity(array_descriptor * desc) {
+	return (uint16_t)desc->arrsize + (uint16_t)(uintptr_t)desc->arr;
+}
+
+uint16_t __attribute__((noinline, noipa, noclone)) check_integrity(array_descriptor * desc) {
+	if (desc->integrity == (desc->arrsize + (uint16_t)(uintptr_t)desc->arr)) {
+		return CFI_TRUE;
+	} else {
+		return CFI_FALSE;
+	}
+}
+
+uint16_t __attribute__((noinline, noipa, noclone)) compute_integrity_set(mem_set_struct * desc) {
+	return desc->arr->integrity + (uint16_t)desc->cst;
+}
+
+uint16_t __attribute__((noinline, noipa, noclone)) compute_integrity_cpy(mem_cpy_struct * desc) {
+	return desc->arrsource->integrity + desc->arrdest->integrity;
+}
+
+uint16_t __attribute__((noinline, noipa, noclone)) compute_integrity_cmp(mem_cmp_struct * desc) {
+	return desc->arr1->integrity + desc->arr2->integrity + (uint16_t)(uintptr_t)desc->result;
+}
+
+uint16_t __attribute__((noinline, noipa, noclone)) check_integrity_set(mem_set_struct * desc) {
+	if ((desc->integrity == desc->arr->integrity + desc->cst) && (check_integrity(desc->arr) == CFI_TRUE)){
+		return CFI_TRUE;
+	} else {
+		return CFI_FALSE;
+	}
+}
+
+uint16_t __attribute__((noinline, noipa, noclone)) check_integrity_cpy(mem_cpy_struct * desc) {
+	if ((desc->integrity == desc->arrsource->integrity + desc->arrdest->integrity) 
+	&& (check_integrity(desc->arrsource) == CFI_TRUE) 
+	&& (check_integrity(desc->arrdest) == CFI_TRUE)) {
+		return CFI_TRUE;
+	} else {
+		return CFI_FALSE;
+	}
+}
+
+uint16_t __attribute__((noinline, noipa, noclone)) check_integrity_cmp(mem_cmp_struct * desc) {
+	if ((desc->integrity == desc->arr1->integrity + desc->arr2->integrity + (uint16_t)(uintptr_t)desc->result) 
+	&& (check_integrity(desc->arr1) == CFI_TRUE) 
+	&& (check_integrity(desc->arr2) == CFI_TRUE)){
+		return CFI_TRUE;
+	} else {
+		return CFI_FALSE;
+	}
+}
+
+#endif
+
+uint32_t __attribute__((noinline, noclone)) fault_dump(int Element)
+{
+	uint32_t ret;
+
+	switch (Element)
+	{
+	case 0:
+		ret = (uint32_t)x;
+		break;
+
+	case 1:
+		ret = sizeof(x);
+		break;
+
+	case 2:
+		ret = (uint32_t)b;
+		break;
+
+	case 3:
+		ret = sizeof(b);
+		break;
+
+	default:
+		ret = 0;
+		break;
+	}
+
+	fault_end((uint32_t)ret);
+
+	return ret;
+}
+
+#ifdef NOPROTECTION
+/* 
+Description
+2 The mem_set function  copies  the  value  of cst (converted  to  an unsigned char) into
+each of the first size characters of the object pointed to by tab.
+Returns
+3 The mem_set function returns the value of tab. */
+void* __attribute__((noipa, noinline, noclone, section(".noprot"))) mem_set(void *tab, int cst, size_t size)
+{
+	size_t i = 0;
+
+	for (i = 0; i < size; i++)
+	{
+		((unsigned char *)tab)[i] = (unsigned char)cst;
+	}
+	return tab;
+}
+
+
+/* 
+Description
+2 The mem_cpy function  copies size characters  from  the  object  pointed  to  by tabsource into  the
+object pointed to by tabdest. If copying takes place between objects that overlap, the behavior
+is undefined.
+Returns
+3 The mem_cpy function returns the value of tabdest. */
+void* __attribute__((noipa, noinline, noclone, section(".noprot"))) mem_cpy(void *tabdest, void *tabsource, size_t size)
+{
+	size_t i = 0;
+
+	for (i = 0; i < size; i++)
+	{
+		((unsigned char *)tabdest)[i] = ((unsigned char *)tabsource)[i];
+	}
+	return tabdest;
+}
+
+/*
+Description
+2 The mem_cmp function  compares  the  first size characters  of  the  object  pointed  to  by tab1 to
+the first size characters of the object pointed to by tab2
+Returns
+3 The mem_cmp function  returns  an  integer  greater  than,  equal  to,  or  less  than  zero,
+accordingly as the object pointed to by tab1 is greater than, equal to, or less than the object
+pointed to by tab2. */
+int __attribute__((noipa, noinline, noclone, section(".noprot"))) mem_cmp( void *tab1, void *tab2, size_t size)
+{
+	unsigned char *tab11 = (unsigned char *)tab1;
+	unsigned char *tab22 = (unsigned char *)tab2;
+	size_t i = 0;
+	if (size == 0) {
+		return 0;
+	}
+	while ((*tab11 == *tab22) && (i < size)) {
+		tab11++;
+		tab22++;
+		i++;
+	}
+	if(i < size)
+		return *tab11 - *tab22;
+	else
+		return 0;
+}
+#endif
+
+#ifdef CFICOT
+/* 
+Description
+-The sec_mem_set function  copies  the  value  of cst (converted  to  an unsigned char) into
+each of the first size characters of the object pointed to by tab.
+Returns
+-The sec_mem_set function returns a status value ensuring security requirements.
+security features:
+-We ensure that "size" iterations have been made
+-At each iteration step, we ensure that the assignment to cst is made
+What isn't guarantied:
+-integrity of input parameters isn't ensured
+ */
+#undef CFI_FUNC
+#define CFI_FUNC sec_mem_set
+uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_set"))) sec_mem_set(mem_set_struct *DMEM)
+{
+	volatile size_t i = 0;
+	volatile uint16_t status;
+	volatile uint16_t sum = CFI_CST;
+
+	if(check_integrity_set(DMEM) != CFI_TRUE)
+		return CFI_ERROR;
+	status = CFI_SET_SEED(status);
+
+	for (i = 0; i < DMEM->arr->arrsize; i++)
+	{	
+		((unsigned char *)DMEM->arr->arr)[i] = (unsigned char)CFI_access(DMEM->cst);
+		sum = sum + (uint16_t)((unsigned char *)DMEM->arr->arr)[i];
+		sum = sum - (uint16_t)CFI_access(DMEM->cst);
+	}
+	status = CFI_FEED(status, 16, sum + DMEM->arr->arrsize - i);
+	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_CST);
+	status = CFI_FINAL_STEP(status, 1);
+	status = CFI_CHECK_FINAL(status);
+
+	return status;
+}
+
+
+/* 
+Description
+2 The sec_mem_cpy function  copies size characters  from  the  object  pointed  to  by tabsource into  the
+object pointed to by tabdest. If copying takes place between objects that overlap, the behavior
+is undefined.
+Returns
+3 The sec_mem_cpy function returns a status value ensuring security requirements.
+security features:
+-We ensure that "size" iterations have been made
+-At each iteration step, we ensure that the copy of the current element is made
+What isn't guarantied:
+-integrity of input parameters isn't ensured
+ */
+#undef CFI_FUNC
+#define CFI_FUNC sec_mem_cpy
+uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cpy"))) sec_mem_cpy(mem_cpy_struct *DMEM)
+{
+	volatile size_t i = 0;
+	volatile uint16_t status;
+	volatile uint16_t sum = CFI_CST;
+
+	if(check_integrity_cpy(DMEM) != CFI_TRUE)
+		return CFI_ERROR;
+	if((DMEM->arrsource->arrsize != DMEM->arrdest->arrsize) || (DMEM->arrsource == DMEM->arrdest))
+		return CFI_ERROR;
+
+	status = CFI_SET_SEED(status);
+
+	for (i = 0; i < DMEM->arrdest->arrsize; i++)
+	{
+		((unsigned char *)DMEM->arrdest->arr)[i] = ((unsigned char *)DMEM->arrsource->arr)[i];
+		sum = sum + (uint16_t)((unsigned char *)DMEM->arrdest->arr)[i];
+		sum = sum - (uint16_t)((unsigned char *)DMEM->arrsource->arr)[i];
+
+	}
+	status = CFI_FEED(status, 16, sum + DMEM->arrdest->arrsize - i);
+	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_CST);
+	status = CFI_FINAL_STEP(status, 1);
+	status = CFI_CHECK_FINAL(status);
+	return status;
+}
+
+/*
+Description
+2 The sec_mem_cmp function  compares  the  first size characters  of  the  object  pointed  to  by tab1 to
+the first size characters of the object pointed to by tab2
+Returns
+3 The sec_mem_cmp function store the comparison result as an  integer  greater  than,  equal  to,  or  less  than  zero,
+accordingly as the object pointed to by tab1 is equal to the object pointed to by tab2 or not
+4 The sec_mem_cmp function returns a status value ensuring security requirements.
+security features:
+-We ensure that "size" iterations have been made
+-We ensure that comparison isn't trivial, ie tab1 and tab2 points towards distincts objects of non null length
+-At each iteration step, we ensure that the comparison is correctly made beetween the 2 objects
+What isn't guarantied:
+-integrity of input parameters isn't ensured
+ */
+#undef CFI_FUNC
+#define CFI_FUNC sec_mem_cmp
+uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cmp"))) sec_mem_cmp(mem_cmp_struct *DMEM)
+{
+	volatile uint16_t status;
+	volatile uint16_t sum = CFI_CST;
+	volatile unsigned char *tab11 = (unsigned char *)DMEM->arr1->arr;
+	volatile unsigned char *tab22 = (unsigned char *)DMEM->arr2->arr;
+	size_t i = 0;
+	sum = CFI_MASK_DATA16(sum,__CFI_SEED_sec_mem_cmp,1);
+	
+
+	if(check_integrity_cmp(DMEM) != CFI_TRUE)
+		return CFI_ERROR;
+	if((DMEM->arr1->arrsize == 0) || (DMEM->arr1->arrsize != DMEM->arr2->arrsize))
+		return CFI_ERROR;
+	
+	*(DMEM->result) = 0x3A;
+
+	status = CFI_SET_SEED(status);
+
+	status = CFI_NEXT_STEP(status,1);
+
+	if(DMEM->arr1 == DMEM->arr2)
+		return CFI_ERROR;
+
+	sum = CFI_UNMASK_DATA16(sum,status);
+	if(sum != CFI_CST) {
+		return CFI_ERROR;
+	}
+
+	while (i < DMEM->arr1->arrsize) {
+		volatile int tmp = i + (*tab11) - *tab22;
+		*(DMEM->result) += tmp;
+		sum = sum + tmp -( *tab11 - *tab22) - i;
+		tab11++;
+		tab22++;
+		i++;
+	}
+	*(DMEM->result) = *(DMEM->result) - (0x3A + ((DMEM->arr1->arrsize * (DMEM->arr1->arrsize-1))/2));
+	status = CFI_FEED(status, 16, sum);
+	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
+	status = CFI_FINAL_STEP(status, 2);
+	status = CFI_CHECK_FINAL(status);
+	return status;
+}
+#endif
+
+#ifdef NOPROTECTION
+uint32_t __attribute__((noipa, noinline, noclone, section(".noprot"))) mem_call(uint8_t *tab1, uint8_t *tab2, uint8_t *tab3, uint8_t cst, size_t size)
+{
+
+	asm("SPUN_mem_call_start:");
+
+	int OPcmp;
+	OPcmp = 0;
+
+	asm("SPUN_mem_start:");
+	asm("SPUN_mem_set_start:");
+	tab2 = mem_set(tab2,cst,size);
+	asm("SPUN_mem_set_end:");
+	asm("SPUN_mem_cpy_start:");
+	tab3 = mem_cpy(tab3,tab1,size);
+	asm("SPUN_mem_cpy_end:");
+	asm("SPUN_mem_cmp_start:");
+	OPcmp = mem_cmp(tab3,tab2,size);
+	asm("SPUN_mem_cmp_end:");
+	asm("SPUN_mem_end:");
+
+	asm("SPUN_mem_call_end:");
+
+	if ((memcmp(x, ref2, sizeof(ref2)) == 0) && (memcmp(b, ref1, sizeof(ref1)) == 0) && (OPcmp != 0))
+		return SPUN_EXEC_OK;
+	else
+		return SPUN_FAULT_INJECTED;
+}
+#endif
+
+#ifdef CFICOT
+#undef CFI_FUNC
+#define CFI_FUNC mem
+uint16_t __attribute__((noipa, noinline, noclone, section(".mem"))) mem(mem_set_struct *mems, mem_cpy_struct *memcp, mem_cmp_struct *memcm)
+{
+	volatile uint16_t status;
+	memset_f pmset;
+	memcpy_f pmcpy;
+	memcmp_f pmcmp;
+
+	asm volatile("nop");
+	asm("SPUN_mem_start:");
+	asm volatile("nop");
+	if(check_integrity_set(mems) != CFI_TRUE)
+		return CFI_ERROR;
+	if(check_integrity_cpy(memcp) != CFI_TRUE)
+		return CFI_ERROR;
+	if(check_integrity_cmp(memcm) != CFI_TRUE)
+		return CFI_ERROR;
+
+
+	status = CFI_SET_SEED(status);
+
+	asm("SPUN_mem_set_start:");
+	pmset = (memset_f)(((uint16_t)((uintptr_t)sec_mem_set)) ^ status ^ (CFI_SEED()));
+	status = CFI_FEED(status, 16, pmset(mems));
+	asm("SPUN_mem_set_end:");
+	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(sec_mem_set));
+	asm("SPUN_mem_cpy_start:");
+	pmcpy = (memcpy_f)(((uint16_t)((uintptr_t)sec_mem_cpy)) ^ status ^ (CFI_STEP(1)));
+	status = CFI_FEED(status, 16, pmcpy(memcp));
+	asm("SPUN_mem_cpy_end:");
+	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_FINAL(sec_mem_cpy));
+	asm("SPUN_mem_cmp_start:");
+	pmcmp = (memcmp_f)(((uint16_t)((uintptr_t)sec_mem_cmp)) ^ status ^ (CFI_STEP(2)));
+	status = CFI_FEED(status, 16, pmcmp(memcm));
+	asm("SPUN_mem_cmp_end:");
+	status = CFI_COMPENSATE_STEP1(status, 2, 3, 16, CFI_FINAL(sec_mem_cmp));
+
+	status = CFI_FINAL_STEP(status, 3);
+	status = CFI_CHECK_FINAL(status);
+
+	asm volatile("nop");
+	asm("SPUN_mem_end:");
+	asm volatile("nop");
+
+	return status;
+}
+
+#undef CFI_FUNC
+#define CFI_FUNC mem_call
+extern unsigned char __start_section_mem_call;
+extern unsigned char __stop_section_mem_call;
+uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) mem_call(uint8_t *tab1, uint8_t *tab2, uint8_t *tab3, uint8_t cst, size_t size)
+{
+	OPcmp = 1;
+	volatile uint16_t status;
+#ifdef CHECK_BINARY_INTEGRITY
+	volatile uint16_t CRC_integrity = 0, check_integrity = 1;
+#endif
+
+	asm("SPUN_mem_call_start:");
+
+	array_descriptor tab11, tab22, tab33;
+	mem_set_struct mems;
+	mem_cpy_struct memcp;
+	mem_cmp_struct memcm;
+	tab11.arr = tab1;
+	tab11.arrsize = size;
+	tab11.integrity = compute_integrity(&tab11);
+	if ((CFI_access(tab11.arr) != CFI_access(tab1)) || 
+			(CFI_access(tab11.arrsize) != CFI_access(size))) {
+		return SPUN_FAULT_DETECTED;
+	}
+	tab22.arr = tab2;
+	tab22.arrsize = size;
+	tab22.integrity = compute_integrity(&tab22);
+	if ((CFI_access(tab22.arr) != CFI_access(tab2)) || 
+			(CFI_access(tab22.arrsize) != CFI_access(size))) {
+		return SPUN_FAULT_DETECTED;
+	}
+	tab33.arr = tab3;
+	tab33.arrsize = size;
+	tab33.integrity = compute_integrity(&tab33);
+	if ((CFI_access(tab33.arr) != CFI_access(tab3)) || 
+			(CFI_access(tab33.arrsize) != CFI_access(size))) {
+		return SPUN_FAULT_DETECTED;
+	}
+
+	mems.arr = &tab22;
+	mems.cst = cst;
+	mems.integrity = compute_integrity_set(&mems);
+	if ((mems.arr != &tab22) || (CFI_access(mems.cst) != CFI_access(cst))) {
+		return SPUN_FAULT_DETECTED;
+	}
+
+	memcp.arrdest = &tab33;
+	memcp.arrsource = &tab11;
+	memcp.integrity = compute_integrity_cpy(&memcp);
+	if ((memcp.arrdest != &tab33) || 
+			(memcp.arrsource != &tab11)) {
+		return SPUN_FAULT_DETECTED;
+	}
+
+	memcm.arr1 = &tab33;
+	memcm.arr2 = &tab22;
+	memcm.result = &OPcmp;
+	memcm.integrity = compute_integrity_cmp(&memcm);
+	if ((memcm.arr1 != &tab33) || 
+			(memcm.arr2 != &tab22) || 
+			(memcm.result != &OPcmp)) {
+		return SPUN_FAULT_DETECTED;
+	}
+
+	status = CFI_SET_SEED(status);
+
+	status = CFI_FEED(status, 16, mem(&mems, &memcp, &memcm));
+	
+	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(mem));
+
+#ifdef CHECK_BINARY_INTEGRITY
+	CRC_integrity = crc16(CRC_integrity, &__start_section_mem_call, &__stop_section_mem_call - &__start_section_mem_call);
+	check_integrity = CRC_integrity ^ CFI_F_Integrity[0] ^ CFI_CST;
+
+	status = CFI_FEED(status, 16, check_integrity);
+	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
+#else
+	status = CFI_NEXT_STEP(status,2);
+#endif
+
+	status = CFI_FINAL_STEP(status, 2);
+	status = CFI_CHECK_FINAL(status);
+
+	asm("SPUN_mem_call_end:");
+
+	if (status == CFI_ERROR)
+		return SPUN_FAULT_DETECTED;
+	else if ((memcmp(x, ref2, sizeof(ref2)) == 0) && (memcmp(b, ref1, sizeof(ref1)) == 0) && (OPcmp != 0))
+		return SPUN_EXEC_OK;
+	else
+		return SPUN_FAULT_INJECTED;
+}
+#endif
+
+/**
+ * @brief Executes the fault testing scenario for the mem functions
+ *
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ */
+int main(void)
+{
+	memset(x, 0xFF, 3 * LENGTH);
+
+	fault_end(mem_call(a + LENGTH, b + LENGTH, x + LENGTH, c, LENGTH));
+
+	fault_end(SPUN_SETUP_PROBLEM);
+	exit(0);
+}
