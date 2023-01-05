@@ -51,12 +51,10 @@ data = file3.read()
 data_len = len(data)
 crc_data = 0
 crc_data = compute_crc(crc_data, data, data_len)
-print(crc_data.to_bytes(2, 'little'))
 
 some_bytes = bytearray(b'')
 some_bytes = some_bytes + crc_data.to_bytes(2, 'little')
 some_bytes = some_bytes + b'\x1D\xE6\x55\x9F\xC3\xA9\x55\x9F'
-print(some_bytes)
 
 file2.write(some_bytes)
 file2.close()

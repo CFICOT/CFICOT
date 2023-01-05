@@ -4,10 +4,9 @@ Software-only Control-Flow Integrity against Fault Injection Attacks
 Examples available:
 -Min_array(YACCA)
 -Memory functions (memset memcpy memcmp)
+-VerifyPIN
 
-Others examples coming later on
--VerifyPin
--ECDSA sign/verify
+Others examples might come later on
 
 Compiler:
 arm-none-eabi-gcc (GNU Arm Embedded Toolchain 9-2020-q2-update) 9.3.1 20200408 (release)
@@ -16,4 +15,39 @@ This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 https://developer.arm.com/downloads/-/gnu-rm
 
-COMPILATION.sh build the example for Arm Cortex® M3
+Summary:
+-COMPILATION.sh build the examples for Arm Cortex® M3
+-CFI protection and protected/unprotected code from Examples are provided
+-Fault injection simulation tools are not provided
+
+Files Details:
+-CFICOT.c/CFICOT.h: macros and constants used for the CFI protection
+-crc.c/crc.h: generated crc16 code in order to use a crc transition function.
+-YACCA.c/YACCA.h: Alternative CFI protection implementation (see Improved software-
+based processor control-flow errors detection technique. Goloubeva et al)
+
+-DEFINE_CFI.py preprocessing script for computation of the necessary CFI values 
+(stored in .cfi.h files in build directory)
+-Edit_CFI_Integrity_elf.py preprocessing script used to link the integrity of 
+MEM_FUNC's binary to its CoT
+
+-MEM_FUNC/faults_CFI_MEM.c: Memory functions secenario compiled with 
+and without CFI protection (memset memcpy memcmp)
+-MIN_ARRAY/faults_CFI_MIN_ARRAY.c: Example code from YACCA's article compiled 
+without any protection with our CFI scheme and with enriched YACCA
+
+VERIFY_PIN
+VerifyPIN_1_HB is the version number 1 coming from FISSC: the Fault Injection 
+and Simulation Secure Collection, it comes with the functionnality 
+"HB" Hardenned booleans. We compile 2 scenario of attack 
+"CNT" which starts with a correct PIN but 0 attempt lefts
+"PWD" which starts with 3 attempts left but an incorrect PIN.
+Version 11 is the protected code of version 1
+version 31 is the same protected code with an additionnal test to detect the 
+execution of "byteArrayCompare". as described in section 5.2 of the article 
+we don't want the attacker to be able to execute the function at all. with this 
+version we found 2 possible FIA which leads to version 32.
+Version 32 protects against these 2 attack scenario with the 
+CFI function GET_SEED (only byteArrayCompare call and seed initialisation
+slighly differs from version 31).
+

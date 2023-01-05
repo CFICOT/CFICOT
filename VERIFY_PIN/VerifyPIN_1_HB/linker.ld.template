@@ -1,0 +1,74 @@
+/**************************************************************************/
+/*                                                                        */
+/*  This file is part of FISSC.                                           */
+/*                                                                        */
+/*  you can redistribute it and/or modify it under the terms of the GNU   */
+/*  Lesser General Public License as published by the Free Software       */
+/*  Foundation, version 3.0.                                              */
+/*                                                                        */
+/*  It is distributed in the hope that it will be useful,                 */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
+/*  GNU Lesser General Public License for more details.                   */
+/*                                                                        */
+/*  See the GNU Lesser General Public License version 3.0                 */
+/*  for more details (enclosed in the file LICENSE).                      */
+/*                                                                        */
+/**************************************************************************/
+
+/* Define the entry point according to the specification
+ * of your component; defaults to _start
+ */
+ENTRY(_start)
+
+/* Define the memory layout of your component,
+ * and permissions on the layout.
+ */
+MEMORY
+{
+  NVM(rwx)      : ORIGIN = 0x00000000, LENGTH = 64K
+  RAM (rwx)     : ORIGIN = 0x10000000, LENGTH = 64K
+}
+
+
+/* Define the binary sections according
+ * to the specification of your component;
+ * you may need to add sections and specific
+ * symbols (marking data start and end, for instance),
+ * depending on the component.
+ */
+SECTIONS
+{
+  /* Add startup section if necessary. */
+
+  /* Code goes into code section */
+  .text :
+  {
+    . = ALIGN(4);
+    /* Main goes first */
+    main.o(.text)
+    *(.text)
+    *(.text*)
+    *(.rodata)
+    *(.rodata*)
+    . = ALIGN(4);
+  } >NVM
+
+  .data :
+  {
+    . = ALIGN(4);
+    *(.data)
+    *(.data*)
+    . = ALIGN(4);
+  } >RAM
+
+  /* Zero-initialized data */
+  .bss :
+  {
+    . = ALIGN(4);
+    *(.bss)
+    *(.bss*)
+    *(COMMON)
+    . = ALIGN(4);
+  } >RAM
+}

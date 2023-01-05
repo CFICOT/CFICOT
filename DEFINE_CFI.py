@@ -174,7 +174,7 @@ for line in Lines:
 
                 else:
                         m = n
-                        while (line[m] != ")"):
+                        while ((line[m] != ")") & (line[m] != ";")):
                                 m = m + 1
                         seed = int(line[n+6:n+12],16)
 

@@ -7,7 +7,7 @@
 
 #ifdef CFICOT
 #include "CFICOT.h"
-#include "build/faults_CFI_MEM.cfi.h"
+#include "MEM_FUNC/faults_CFI_MEM.cfi.h"
 #endif
 
 typedef uint16_t ret_t;

@@ -9,7 +9,7 @@
 #endif
 #ifdef CFICOT
 #include "CFICOT.h"
-#include "build/faults_CFI_MIN_ARRAY.cfi.h"
+#include "MIN_ARRAY/faults_CFI_MIN_ARRAY.cfi.h"
 #endif
 
 typedef uint16_t ret_t;

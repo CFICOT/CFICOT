@@ -44,6 +44,10 @@
 #define __CFI_SEED_SIGN 0xcfb5
 #define __CFI_SEED_VERIFY 0x8bfd
 #define __CFI_SEED_PONCURVE 0x719a
+#define __CFI_SEED_byteArrayCompare 0xad41
+#define __CFI_SEED_verifyPIN_11 0x2ba6
+#define __CFI_SEED_verifyPIN_31 0xc9a3
+#define __CFI_SEED_verifyPIN_32 0xbab8
 
 //Merge macros
 #define _CFI_MRG(a,b) __CFI_ ## a ## _ ## b
@@ -73,7 +77,7 @@
 
 //CFI functions macros
 #define CFI_GET_SEED(status,TOKEN_SEED) status; if(TOKEN_SEED==CFI_SEED()) \
-status = TOKEN_SEED; else status = CFI_ERROR
+status = TOKEN_SEED; else return CFI_ERROR
 #define CFI_SET_SEED(status) CFI_SEED()
 #define CFI_NEXT_STEP(status,n) CFI_TFunc16(status,TOSTEP_##n)
 #define CFI_FEED(status,S,V) CFI_TFunc##S(status,V)
