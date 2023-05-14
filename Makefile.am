@@ -10,7 +10,11 @@ noinst_PROGRAMS = faults_CFI_MEM_NOPROT.elf \
                   faults_CFI_VP_11_PWD.elf \
                   faults_CFI_VP_11_CNT.elf \
                   faults_CFI_VP_31_CNT.elf \
-                  faults_CFI_VP_32_CNT.elf
+                  faults_CFI_VP_32_CNT.elf \
+                  faults_CFI_SWITCH_NOPROT.elf \
+                  faults_CFI_SWITCH_COT.elf \
+                  faults_CFI_FCALL_NOPROT.elf \
+                  faults_CFI_FCALL_COT.elf
 
 SUFFIXES = .cfi.h .pp
 
@@ -113,3 +117,33 @@ faults_CFI_VP_32_CNT_elf_LDADD =
 faults_CFI_VP_32_CNT_elf_SOURCES = VERIFY_PIN/faults_verifypin.c  src/CFICOT.c  src/startup.s  src/faults.c  src/crc.c VERIFY_PIN/VerifyPIN_1_HB/src/countermeasure.c VERIFY_PIN/VerifyPIN_1_HB/src/initialize.c VERIFY_PIN/VerifyPIN_1_HB/src/oracle.c VERIFY_PIN/VerifyPIN_32_HB+CFICOND/src/code.c
 EXTRA_faults_CFI_VP_32_CNT_elf_DEPENDENCIES = ${LinkerDependencies}
 BUILT_SOURCES += VERIFY_PIN/VerifyPIN_32_HB+CFICOND/src/code.cfi.h VERIFY_PIN/faults_verifypin.cfi.h
+
+faults_CFI_SWITCH_NOPROT_elf_CFLAGS = -DNOPROTECTION
+faults_CFI_SWITCH_NOPROT_elf_CFLAGS += -I${top_srcdir}/include
+faults_CFI_SWITCH_NOPROT_elf_LDFLAGS = -T ${top_srcdir}/Linker_CortexM.ld 
+faults_CFI_SWITCH_NOPROT_elf_LDADD =
+faults_CFI_SWITCH_NOPROT_elf_SOURCES = SWITCH/faults_CFI_SWITCH.c src/startup.s src/faults.c
+EXTRA_faults_CFI_SWITCH_NOPROT_elf_DEPENDENCIES = ${LinkerDependencies}
+
+faults_CFI_SWITCH_COT_elf_CFLAGS = -DCFICOT -D${TFUNC} -DMPOINTER
+faults_CFI_SWITCH_COT_elf_CFLAGS += -I${top_srcdir}/include
+faults_CFI_SWITCH_COT_elf_LDFLAGS = -T ${top_srcdir}/Linker_CortexM.ld 
+faults_CFI_SWITCH_COT_elf_LDADD =
+faults_CFI_SWITCH_COT_elf_SOURCES = SWITCH/faults_CFI_SWITCH.c src/startup.s src/faults.c src/CFICOT.c src/crc.c
+EXTRA_faults_CFI_SWITCH_COT_elf_DEPENDENCIES = ${LinkerDependencies}
+BUILT_SOURCES += SWITCH/faults_CFI_SWITCH.cfi.h
+
+faults_CFI_FCALL_NOPROT_elf_CFLAGS = -DNOPROTECTION
+faults_CFI_FCALL_NOPROT_elf_CFLAGS += -I${top_srcdir}/include
+faults_CFI_FCALL_NOPROT_elf_LDFLAGS = -T ${top_srcdir}/Linker_CortexM.ld 
+faults_CFI_FCALL_NOPROT_elf_LDADD =
+faults_CFI_FCALL_NOPROT_elf_SOURCES = FCALL/faults_CFI_FCALL.c src/startup.s src/faults.c
+EXTRA_faults_CFI_FCALL_NOPROT_elf_DEPENDENCIES = ${LinkerDependencies}
+
+faults_CFI_FCALL_COT_elf_CFLAGS = -DCFICOT -D${TFUNC} -DMPOINTER
+faults_CFI_FCALL_COT_elf_CFLAGS += -I${top_srcdir}/include
+faults_CFI_FCALL_COT_elf_LDFLAGS = -T ${top_srcdir}/Linker_CortexM.ld 
+faults_CFI_FCALL_COT_elf_LDADD =
+faults_CFI_FCALL_COT_elf_SOURCES = FCALL/faults_CFI_FCALL.c src/startup.s src/faults.c src/CFICOT.c src/crc.c
+EXTRA_faults_CFI_FCALL_COT_elf_DEPENDENCIES = ${LinkerDependencies}
+BUILT_SOURCES += FCALL/faults_CFI_FCALL.cfi.h
