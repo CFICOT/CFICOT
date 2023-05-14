@@ -54,9 +54,10 @@ crc_data = compute_crc(crc_data, data, data_len)
 
 some_bytes = bytearray(b'')
 some_bytes = some_bytes + crc_data.to_bytes(2, 'little')
-some_bytes = some_bytes + b'\x1D\xE6\x55\x9F\xC3\xA9\x55\x9F'
 
 file2.write(some_bytes)
 file2.close()
 
-os.system('arm-none-eabi-objcopy --update-section ".CFI_F_Integrity"="build/CFI_F_integrity.bin" "build/faults_CFI_MEM_COT.elf"')
+ret = exit(os.system('arm-none-eabi-objcopy --update-section ".CFI_F_Integrity"="build/CFI_F_integrity.bin" "build/faults_CFI_MEM_COT.elf"'))
+if ret:
+    exit(1)

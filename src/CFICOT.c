@@ -12,6 +12,9 @@ uint16_t __attribute__ ((section (".cficustom"))) CFI_TFunc16(uint16_t status, u
     Values[0]= (uint8_t)(Value >> 8);
     Values[1]= (uint8_t)Value;
     return crc16(status, Values, sizeof(Values));
+#else
+/* Fallback in case of a missing TFunc's definition*/
+    return status ^ Value;
 #endif
 }
 
@@ -27,7 +30,6 @@ void __attribute__ ((noipa,noinline,noclone,optimize("O0"))) FAULT_OFF (void)
 
 uint16_t crc16(uint16_t crc, uint8_t *buffer, uint16_t len)
 {
-    //crc = crc_init();
     crc = crc_update(crc, buffer, len);
     crc = crc_finalize(crc);
     return crc;

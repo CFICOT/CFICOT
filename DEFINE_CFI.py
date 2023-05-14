@@ -1,15 +1,5 @@
 import sys
 
-#__CFI_SEED_MIN_ARRAY = hex(int("0x7ede",16))
-#__CFI_SEED_MIN_ARRAY_CALL = hex(int("0x4dfa",16))
-#__CFI_SEED_mem = hex(int("0xa032",16))
-#__CFI_SEED_mem_call = hex(int("0xf115",16))
-#__CFI_SEED_sec_mem_set = hex(int("0x6a09",16))
-#__CFI_SEED_sec_mem_cpy = hex(int("0xbb67",16))
-#__CFI_SEED_sec_mem_cmp = hex(int("0x3c6e",16))
-#__CFI_SEED_SIGN = hex(int("0xcfb5",16))
-#__CFI_SEED_VERIFY = hex(int("0x8bfd",16))
-#__CFI_SEED_PONCURVE = hex(int("0x719a",16))
 KEY_CFI = int("0x8eb6",16)
 
 STEP = [0x8a3e,0x1ebd,0x9367,0xf67a,0xaa9f,0x0cda,0x1d5f,0xc7d9,0x9c9b,
@@ -115,20 +105,60 @@ def WRITE_TOCOMPENSATE1(file1,seed,currentstep,nextstep,size,value):
                 print(line)
                 print("error compensate")
 
-def WRITE_TOCOMPENSATE2():
-        print('TODO')
+def WRITE_TOCOMPENSATE2(file1,seed,currentstep,nextstep,size1,value1,size2,value2):
+        status = seed
+        status_dest = seed
+        for i in range(0,currentstep):
+                status = TFunc(status,STEP[i+1])
+        for i in range(0,nextstep):
+                status_dest = TFunc(status_dest,STEP[i+1])
+        if((size1 == 16) & (size2 == 16)):
+                status = CFI_FEED(status,value1)
+                status = CFI_FEED(status,value2)
+                compensation = CFI_GET_COMP_VALUE(status,status_dest)
+                file1.write(" " + format(compensation, '#06x') + "\n")
+        else:
+                print(line)
+                print("error compensate")
 
-def WRITE_TOCOMPENSATE3():
-        print('TODO')
+def WRITE_MASK(file1,data,size):
+        i = 0
+        mask = ""
+        Bdata = [0x00,0x00]
+        if(size > 64):
+                print("error data size to mask")
+        while(i < size):
+                Bdata[0] = (data >> 8) & 0xff
+                Bdata[1] = data & 0xff
+                mask += f'{(compute_crc(data,Bdata,2)):x}'
+                i = i + 16
+        file1.write(" 0x" + mask + "\n")
 
-def WRITE_TOCOMPENSATE4():
-        print('TODO')
-
-def WRITE_MASK(file1,seed,currentstep):
+def WRITE_UNMASK(file1,data,size,seed,currentstep):
         status = seed
         for i in range(0,currentstep):
                 status = TFunc(status,STEP[i+1])
-        file1.write(" " + format(status, '#06x') + "\n")
+        
+        file1.write(" " + "__CFI_MASK_" + str(size) + "_" + data + " ^ " + format(status, '#06x') + "\n")
+
+def WRITE_UNMASK_POINTER(file1,data,indice,size,seed,currentstep):
+        status = seed
+        for i in range(0,currentstep):
+                status = TFunc(status,STEP[i+1])
+        
+        i = 0
+        mask = ""
+        Bdata = [0x00,0x00]
+        if(size > 64):
+                print("error data size to mask")
+        while(i < size):
+                Bdata[0] = (data >> 8) & 0xff
+                Bdata[1] = data & 0xff
+                mask += f'{(compute_crc(data,Bdata,2)):x}'
+                data = data >> 16
+                i = i + 16
+
+        file1.write(" 0x" + mask + " ^ " + format(status, '#06x') + "\n")
 
 file1 = open(sys.argv[1] + '.cfi.h', 'w')
 
@@ -139,15 +169,13 @@ Lines = file2.readlines()
 for line in Lines:
         n = line.find("__CFI_")
         if (n != -1):
-                p = line.find("___CFI_")
+                p = line.find("___CFI_",n)
                 if(p != -1):
-                        q = p
-                        while (line[q] != ")"):
-                                q = q + 1
+                        q = line.find(")",p)
                         file1.write("#define ")
                         file1.write(line[p+1:q])
                         #Final CoT value
-                        if(line[p+14:p+19] == "FINAL"):
+                        if(line.find("FINAL", p) != -1):
                                 seed = int(line[p+7:p+13],16)
                                 final = WRITE_FINAL(file1,seed)
                         else:
@@ -156,7 +184,7 @@ for line in Lines:
                                 print("error compensate final")
 
                         #COMPENSATE the previously computed final
-                        if(line[n+13:n+25] == "TOCOMPENSATE"):
+                        if (line.find("TOCOMPENSATE",n) != -1):
                                 if(line[n+25] == "1"):
                                         seed = int(line[n+6:n+12],16)
                                         currentstep = int(line[n+27],16)
@@ -167,7 +195,7 @@ for line in Lines:
                                         WRITE_TOCOMPENSATE1(file1,seed,currentstep,nextstep,size,final)
                                 else:
                                         print(line)
-                                        print("multiple final feed TODO")
+                                        print("error compensate final")
                         else:
                                 print(line)
                                 print("error compensate final")
@@ -176,42 +204,82 @@ for line in Lines:
                         m = n
                         while ((line[m] != ")") & (line[m] != ";")):
                                 m = m + 1
-                        seed = int(line[n+6:n+12],16)
 
-                        file1.write("#define ")
-                        file1.write(line[n:m])
-
-                        if(line[n+13:n+17] == "STEP"):
-                                currentstep = int(line[n+18],16)
-                                WRITE_STEP(file1,seed,currentstep)
-                        elif(line[n+13:n+20] == "TOFINAL"):
-                                currentstep = int(line[n+21],16)
-                                WRITE_TOFINAL(file1,seed,currentstep)
-                        elif(line[n+13:p+18] == "FINAL"):
-                                WRITE_FINAL(file1,seed)
-                        elif(line[n+13:n+25] == "TOCOMPENSATE"):
-                                if(line[n+25] == "1"):
-                                        currentstep = int(line[n+27],16)
-                                        nextstep = int(line[n+29],16)
-                                        size = int(line[n+31:n+33],10)
-                                        if(line[n+34:n+36] == "0x"):
-                                                value = int(line[n+34:n+40],16)
-                                        else:
-                                                value = int(line[n+34:m],10)
-                                        WRITE_TOCOMPENSATE1(file1,seed,currentstep,nextstep,size,value)
-                                else:
-                                        file1.write(" 0x1234\n")
-                        elif(line[n+13:n+17] == "MASK"):
-                                if(line[n+17:n+19] == "16"):
-                                        currentstep = int(line[n+20],16)
-                                        WRITE_MASK(file1,seed,currentstep)
-                                else:
-                                        print("error MASK")
-
+                        if(line.find("_MASK_", n) != -1):
+                                size = int(line[n+11:n+13],10)
+                                data = ''.join(format(i, '01x') for i in bytearray(line[n+14:m], encoding ='utf-8'))
+                                data = int(data,16)
+                                file1.write("#define ")
+                                file1.write(line[n:m])
+                                WRITE_MASK(file1,data,size)
                         else:
-                                print("error: " + line[n+13:n+25])
-                                print(line[n+13:n+25] + "\n")
-                        
+                                seed = int(line[n+6:n+12],16)
+
+                                file1.write("#define ")
+                                file1.write(line[n:m])
+
+                                if(line.find("_STEP_", n) != -1):
+                                        currentstep = int(line[n+18],16)
+                                        WRITE_STEP(file1,seed,currentstep)
+                                elif(line.find("_TOFINAL_", n) != -1):
+                                        currentstep = int(line[n+21],16)
+                                        WRITE_TOFINAL(file1,seed,currentstep)
+                                elif(line.find("_FINAL", n) != -1):
+                                        WRITE_FINAL(file1,seed)
+                                elif(line.find("_TOCOMPENSATE", n) != -1):
+                                        if(line[n+25] == "1"):
+                                                currentstep = int(line[n+27],16)
+                                                nextstep = int(line[n+29],16)
+                                                size = int(line[n+31:n+33],10)
+                                                if(line[n+34:n+36] == "0x"):
+                                                        value = int(line[n+34:n+40],16)
+                                                else:
+                                                        value = int(line[n+34:m],10)
+                                                WRITE_TOCOMPENSATE1(file1,seed,currentstep,nextstep,size,value)
+                                        elif(line[n+25] == "2"):
+                                                currentstep = int(line[n+27],16)
+                                                nextstep = int(line[n+29],16)
+                                                size1 = int(line[n+31:n+33],10)
+                                                if(line[n+34:n+36] == "0x"):
+                                                        value1 = int(line[n+34:n+40],16)
+                                                else:
+                                                        p = line.find("_", n+34)
+                                                        if (p != -1):
+                                                                value1 = int(line[n+34:p],10)
+                                                                n = p+1
+                                                p = line.find("_", n)
+                                                size2 = int(line[n:p],10)
+                                                n = p+1
+                                                if(line[n:n+2] == "0x"):
+                                                        value2= int(line[n:n+6],16)
+                                                else:
+                                                        value2 = int(line[n:m],10)
+                                                WRITE_TOCOMPENSATE2(file1,seed,currentstep,nextstep,size1,value1,size2,value2)
+                                        else:
+                                                print(line)
+                                                print("error compensate")
+
+                                elif(line.find("_UNMASK_POINTER_", n) != -1):
+                                        currentstep = int(line[n+28],10)
+                                        size = int(line[n+30:n+32],10)
+                                        data_start = n+35
+                                        data_end = m
+                                        data = ''.join(format(i, '01x') for i in bytearray(line[data_start:data_end], encoding ='utf-8'))
+                                        data = int(data,16)
+                                        indice = int(line[n+33:n+34])
+                                        WRITE_UNMASK_POINTER(file1,data,indice,size,seed,currentstep)
+
+                                elif(line.find("_UNMASK_", n) != -1):
+                                        currentstep = int(line[n+20],10)
+                                        size = int(line[n+22:n+24],10)
+                                        data = line[n+25:m]
+                                        WRITE_UNMASK(file1,data,size,seed,currentstep)
+                                
+
+                                else:
+                                        print("error: " + line[n+13:n+25])
+                                        print(line + "\n")
+
 
 
 file2.close()

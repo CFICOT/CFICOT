@@ -83,7 +83,7 @@ inline uint16_t byteArrayCompare(UBYTE* a1, UBYTE* a2, UBYTE size, volatile BOOL
 uint16_t byteArrayCompare(UBYTE* a1, UBYTE* a2, UBYTE size, volatile BOOL *result)
 #endif
 {
-  int i;
+  volatile int i;
   volatile uint16_t status;
   volatile uint16_t sum = CFI_CST;
 
@@ -93,15 +93,17 @@ uint16_t byteArrayCompare(UBYTE* a1, UBYTE* a2, UBYTE size, volatile BOOL *resul
 		return CFI_ERROR;
 
   status = CFI_SET_SEED(status);
-  status = CFI_FEED(status,16,size);
 
   for(i = 0; i < size; i++) {
     if(a1[i] != a2[i]) {
       *result = BOOL_FALSE;
+      status = CFI_FINAL_STEP(status, 0);
       return status;
     }
     sum += CFI_access(a1[i])-CFI_access(a2[i]);
+    sum += i;
   }
+  sum -= (size * (size - 1)) / 2;
   status = CFI_FEED(status,16,sum);
   status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_CST);
   status = CFI_FINAL_STEP(status, 1);

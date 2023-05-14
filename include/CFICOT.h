@@ -44,10 +44,15 @@
 #define __CFI_SEED_SIGN 0xcfb5
 #define __CFI_SEED_VERIFY 0x8bfd
 #define __CFI_SEED_PONCURVE 0x719a
+#define __CFI_SEED_SEC_uECC_vli_equal 0x7c31
 #define __CFI_SEED_byteArrayCompare 0xad41
 #define __CFI_SEED_verifyPIN_11 0x2ba6
 #define __CFI_SEED_verifyPIN_31 0xc9a3
 #define __CFI_SEED_verifyPIN_32 0xbab8
+#define __CFI_SEED_switch_func 0xe14d
+#define __CFI_SEED_switch_call 0x2590
+#define __CFI_SEED_Function_F 0x7d32
+#define __CFI_SEED_Function_G 0x43ab
 
 //Merge macros
 #define _CFI_MRG(a,b) __CFI_ ## a ## _ ## b
@@ -67,13 +72,8 @@
 #define __CFI_FINAL(func) CFI_MRG(_CFI_SEED(func),FINAL)
 #define CFI_TOCOMPENSATE1(n,m,S1,V1) _CFI_TOCOMPENSATE1(n,m,S1,V1)
 #define _CFI_TOCOMPENSATE1(n,m,S1,V1) CFI_MRG(CFI_SEED(),TOCOMPENSATE1_##n##_##m##_##S1##_##V1)
-//#define CFI_TOCOMPENSATE2(n,m,V1,V2) CFI_##CFI_MRG(CFI_SEED(),TOCOMPENSATE_##n##_##m##_##V1##_##V2)
-//#define CFI_TOCOMPENSATE3(n,m,V1,V2,V3) CFI_##CFI_MRG(CFI_SEED(),TOCOMPENSATE_##n##_##m##_##V1##_##V2##_##V3)
-//#define CFI_TOCOMPENSATE4(n,m,V1,V2,V3,V4) CFI_##CFI_MRG(CFI_SEED(),TOCOMPENSATE_##n##_##m##_##V1##_##V2##_##V3##_##V4)
-#define CFI_MASK16(seed,n) _CFI_MASK16(seed,n)
-#define _CFI_MASK16(seed,n) CFI_MRG(seed,MASK16_##n)
-#define CFI_MASK32(seed,n) _CFI_MASK32(seed,n)
-#define _CFI_MASK32(seed,n) CFI_MRG(seed,MASK32_##n)
+#define CFI_TOCOMPENSATE2(n,m,S1,V1,S2,V2) _CFI_TOCOMPENSATE2(n,m,S1,V1,S2,V2)
+#define _CFI_TOCOMPENSATE2(n,m,S1,V1,S2,V2) CFI_MRG(CFI_SEED(),TOCOMPENSATE2_##n##_##m##_##S1##_##V1##_##S2##_##V2)
 
 //CFI functions macros
 #define CFI_GET_SEED(status,TOKEN_SEED) status; if(TOKEN_SEED==CFI_SEED()) \
@@ -86,16 +86,13 @@ status = TOKEN_SEED; else return CFI_ERROR
 //CFI_COMPENSATE(n,m,V...) such as CFI_TFunc16(status,CFI_COMPENSATE(n,m,V...)) = CFI_STEP(m)
 #define CFI_COMPENSATE_STEP1(status,n,m,S1,V1) CFI_TFunc16(status,CFI_TOCOMPENSATE1(n,m,S1,V1))
 #define CFI_COMPENSATE_STEP2(status,n,m,S1,V1,S2,V2) CFI_TFunc16(status,CFI_TOCOMPENSATE2(n,m,S1,V1,S2,V2))
-#define CFI_COMPENSATE_STEP3(status,n,m,S1,V1,S2,V2,S3,V3) CFI_TFunc16(status,CFI_TOCOMPENSATE3(n,m,S1,V1,S2,V2,S3,V3))
-#define CFI_COMPENSATE_STEP4(status,n,m,S1,V1,S2,V2,S3,V3,S4,V4) CFI_TFunc16(status,CFI_TOCOMPENSATE4(n,m,S1,V1,S2,V2,S3,V3,S4,V4))
 #define CFI_CHECK_STEP(status,n) status; if(status != CFI_STEP(n)) \
 status = CFI_ERROR
 #define CFI_CHECK_FINAL(status) status; if(status != CFI_TFunc16(CFI_SEED(),CFI_KEY)) \
 status = CFI_ERROR
-#define CFI_MASK_DATA16(data,seed,n) (CFI_MASK16(seed,n)) ^ data
-#define CFI_UNMASK_DATA16(data,status) data ^ status
-#define CFI_MASK_DATA32(data,seed,n) (CFI_MASK32(seed,n)) ^ data
-#define CFI_UNMASK_DATA32(data,status) data ^ ((uint32_t)status ^ ((uint32_t)(status >> 16)))
+#define CFI_MASK(data,name,size) (data) ^ (__CFI_MASK_##size##_##name)
+#define CFI_UNMASK(Mdata,status,size,n) (Mdata) ^ (status) ^ (CFI_MRG(CFI_SEED(),UNMASK_##n##_##size##_##Mdata))
+#define CFI_UNMASK_POINTER(MPointer,indice,status,size,n) (CFI_F_Pointer[indice]) ^ (status) ^ (CFI_MRG(CFI_SEED(),UNMASK_POINTER_##n##_##size##_##indice##_##MPointer))
 
 extern uint16_t CFI_TFunc16(uint16_t status, uint16_t Value);
 
