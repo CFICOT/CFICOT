@@ -2,15 +2,16 @@ Source code associated to DSD2023 submission:
 Software-only Control-Flow Integrity against Fault Injection Attacks
 
 Examples available:
--Min_array(YACCA)
+-switch (Figures 1-5)
+-FCall (Figure 6)
+-Min_array (YACCA)
 -Memory functions (memset memcpy memcmp)
 -VerifyPIN
 
-Others examples might come later on
 
 Compiler:
-arm-none-eabi-gcc (GNU Arm Embedded Toolchain 9-2020-q2-update) 9.3.1 20200408 (release)
-Copyright (C) 2019 Free Software Foundation, Inc.
+arm-none-eabi-gcc (GNU Arm Embedded Toolchain 9-2020-q2-update) 9.3.1 
+20200408 (release) Copyright (C) 2019 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 https://developer.arm.com/downloads/-/gnu-rm
@@ -21,27 +22,35 @@ Summary:
 -Fault injection simulation tools are not provided
 
 Files Details:
--CFICOT.c/CFICOT.h: macros and constants used for the CFI protection
--crc.c/crc.h: generated crc16 code in order to use a crc transition function.
--YACCA.c/YACCA.h: Alternative CFI protection implementation (see Improved software-
-based processor control-flow errors detection technique. Goloubeva et al)
+-src/CFICOT.c and include/CFICOT.h: macros and constants used for the CFI 
+protection
+-src/crc.c and include/crc.h: generated crc16 code in order to use a crc 
+transition function.
+-src/YACCA.c and include/YACCA.h: Alternative CFI protection implementation 
+(see Improved software-based processor control-flow errors detection technique. 
+Goloubeva et al)
 
 -DEFINE_CFI.py preprocessing script for computation of the necessary CFI values 
-(stored in .cfi.h files in build directory)
+(stored in .cfi.h files in build directory).
 -Edit_CFI_Integrity_elf.py preprocessing script used to link the integrity of 
-MEM_FUNC's binary to its CoT
+MEM_FUNC's binary to its CoT.
 
--MEM_FUNC/faults_CFI_MEM.c: Memory functions secenario compiled with 
-and without CFI protection (memset memcpy memcmp)
+-SWITCH/faults_CFI_SWITCH.c: switch case scenario (Figures 1-5) compiled with 
+and without CFI protection.
+-FCall/faults_CFI_FCALL.c: FCall scenario (Figure 6) compiled with and without
+CFI protection.
+-MEM_FUNC/faults_CFI_MEM.c: Memory functions scenario compiled with 
+and without CFI protection (memset memcpy memcmp).
 -MIN_ARRAY/faults_CFI_MIN_ARRAY.c: Example code from YACCA's paper compiled 
-without any protection with our CFI scheme and with enriched YACCA
+without any protection with our CFI scheme and with enriched YACCA.
 
 VERIFY_PIN
 VerifyPIN_1_HB is the version number 1 coming from FISSC: the Fault Injection 
 and Simulation Secure Collection, it comes with the functionnality 
-"HB" Hardenned booleans. We compile 2 scenarios of attack 
-"CNT" which starts with a correct PIN but 0 attempt lefts
-"PWD" which starts with 3 attempts left but an incorrect PIN.
+"HB" Hardenned booleans. 
+We compile 2 scenarios of attack:
+-"CNT" which starts with a correct PIN but 0 attempt lefts
+-"PWD" which starts with 3 attempts left but an incorrect PIN.
 Version 11 is the protected code of version 1
 version 31 is the same protected code with an additional test to detect the 
 execution of "byteArrayCompare". as described in section VI-C of the paper 
@@ -51,3 +60,13 @@ Version 32 protects against these 2 attack scenario with the
 CFI function GET_SEED (only byteArrayCompare call and seed initialization
 slightly differs from version 31).
 
+build directory:
+-faults_*****_NOPROT.elf: CFI disabled resulting elf files tested with fault 
+injection.
+-faults_*****_COT.elf: CFI enabled resulting elf files tested with fault 
+injection.
+-faults_CFI_VP_****.elf: ELF files resulting for the differents VerifyPIN 
+scenario described above.
+-*****.cfi.h: Each *****.c file is processed with DEFINE_CFI.py which computes 
+the necessary CFI values and stores them in a dedicated *****.cfi.h file before
+compilation.
