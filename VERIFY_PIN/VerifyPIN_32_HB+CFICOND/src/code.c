@@ -27,6 +27,18 @@ extern BOOL g_authenticated;
 extern UBYTE g_userPin[PIN_SIZE];
 extern UBYTE g_cardPin[PIN_SIZE];
 
+/**
+ * @brief byteArrayCompare compares array a1 and a2
+ * @param[in] a1 array1
+ * @param[in] b2 array2
+ * @param[in] size array size
+ * @param SEEDIN execution token for conditionnal execution
+ * @param[out] BOOL resulting comparison
+ * @return CFI_WEXEC or CFI_ERROR depending if the execution happenned
+ * @details compares array a1 and a2, stores the results into BOOL and returns 
+ * a status indicating if execution happenned
+ * conditionnal execution is enabled
+ */
 #undef CFI_FUNC
 #define CFI_FUNC byteArrayCompare
 #ifdef INLINE
@@ -62,6 +74,13 @@ uint16_t byteArrayCompare(UBYTE* a1, UBYTE* a2, UBYTE size, volatile BOOL *resul
   return CFI_WEXEC;
 }
 
+/**
+ * @brief main function faulted in verifyPIN scenario
+ * @param[out] BOOL status of the PIN verification
+ * @return uint16_t the CFI return code (CFI_xxx)
+ * @details checks the try counter then verify the user PIN vs card PIN
+ * version 32 with CFI enabled and conditionnal execution of byteArrayCompare
+ */
 #undef CFI_FUNC
 #define CFI_FUNC verifyPIN_31
 #if defined INLINE && defined PTC

@@ -30,6 +30,15 @@ extern BOOL g_authenticated;
 extern UBYTE g_userPin[PIN_SIZE];
 extern UBYTE g_cardPin[PIN_SIZE];
 
+/**
+ * @brief byteArrayCompare compares array a1 and a2
+ * @param[in] a1 array1
+ * @param[in] b2 array2
+ * @param[in] size array size
+ * @return BOOL_FALSE or BOOL_TRUE
+ * @details compares array a1 and a2, returns a boolean
+ * conditionnal execution is disabled
+ */
 #ifndef CFICOT
 #ifdef INLINE
 inline BOOL byteArrayCompare(UBYTE* a1, UBYTE* a2, UBYTE size) __attribute__((always_inline))
@@ -46,6 +55,13 @@ BOOL byteArrayCompare(UBYTE* a1, UBYTE* a2, UBYTE size)
   return BOOL_TRUE;
 }
 
+/**
+ * @brief main function faulted in verifyPIN scenario
+ * @param[out] BOOL status of the PIN verification
+ * @return uint16_t the CFI return code (CFI_xxx)
+ * @details checks the try counter then verify the user PIN vs card PIN
+ * version 1 with CFI disabled and without conditionnal execution of byteArrayCompare
+ */
 #if defined INLINE && defined PTC
 inline BOOL verifyPIN_1() __attribute__((always_inline))
 #else
@@ -74,6 +90,17 @@ BOOL verifyPIN_1()
   return BOOL_FALSE;
 }
 
+/**
+ * @brief byteArrayCompare compares array a1 and a2
+ * @param[in] a1 array1
+ * @param[in] b2 array2
+ * @param[in] size array size
+ * @param[out] BOOL resulting comparison
+ * @return uint16_t the CFI return code (CFI_xxx)
+ * @details compares array a1 and a2, stores the results into BOOL and returns 
+ * a CFI status
+ * conditionnal execution is disabled
+ */
 #elif defined CFICOT
 #undef CFI_FUNC
 #define CFI_FUNC byteArrayCompare
@@ -112,6 +139,13 @@ uint16_t byteArrayCompare(UBYTE* a1, UBYTE* a2, UBYTE size, volatile BOOL *resul
   return status;
 }
 
+/**
+ * @brief main function faulted in verifyPIN scenario
+ * @param[out] BOOL status of the PIN verification
+ * @return uint16_t the CFI return code (CFI_xxx)
+ * @details checks the try counter then verify the user PIN vs card PIN
+ * version 11 with CFI enabled and without conditionnal execution of byteArrayCompare
+ */
 #undef CFI_FUNC
 #define CFI_FUNC verifyPIN_11
 #if defined INLINE && defined PTC

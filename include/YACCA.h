@@ -1,3 +1,6 @@
+/**
+ * @brief YACCA constants for CFI protection
+ */
 extern const uint32_t B0;
 extern const uint32_t B1;
 extern const uint32_t B2;

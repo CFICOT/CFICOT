@@ -1,3 +1,6 @@
+/**
+ * @file min_array fault injection scenario
+ */
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -12,6 +15,14 @@
 #include "MIN_ARRAY/faults_CFI_MIN_ARRAY.cfi.h"
 #endif
 
+/**
+ * @brief Computes the minimum term by term between 2 arrays
+ * x = min(a,b)
+ * @param a = first array
+ * @param b = second array
+ * @param x = resulting array
+ * @param ref = reference array, x should be equal to ref after the execution
+ */
 typedef uint16_t ret_t;
 #define LENGTH 10
 const uint8_t ref[LENGTH] = {0x10,0x11,0x12,0x13,0x14,0x10,0x11,0x12,0x13,0x14};
@@ -19,6 +30,12 @@ const uint8_t b[3*LENGTH]={3,3,3,3,3,3,3,3,3,3,0x20,0x21,0x22,0x23,0x24,0x10,0x1
 const uint8_t a[3*LENGTH]={1,1,1,1,1,1,1,1,1,1,0x10,0x11,0x12,0x13,0x14,0x20,0x21,0x22,0x23,0x24,2,2,2,2,2,2,2,2,2,2};
 uint8_t x[3*LENGTH];
 
+/**
+ * @brief Dump usefull results to analyze fault scenarios
+ * @param[in] Element variable to be dumped
+ * @return returns Element value or its size
+ * @details Dump chosen variables and their size
+ */
 uint32_t __attribute__ ((noinline,noclone)) fault_dump(int Element)
 {
 	uint32_t ret;
@@ -43,6 +60,16 @@ uint32_t __attribute__ ((noinline,noclone)) fault_dump(int Element)
 }
 
 #ifdef NOPROTECTION
+/**
+ * @brief Main faulted "min_array" function without CFI protection
+ * @param[in] a array1
+ * @param[in] b array2
+ * @param[in] n array size
+ * @param[out] x resulting array
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ * @details computes minimum term by term between arrays a and b and stores 
+ * the result into array x
+ */
 uint32_t __attribute__ ((noipa,noinline,noclone,section (".noprot"))) min_array_call(const uint8_t* a, const uint8_t* b, uint8_t* x, int n)
 {
 
@@ -76,6 +103,16 @@ uint32_t __attribute__ ((noipa,noinline,noclone,section (".noprot"))) min_array_
 
 
 #ifdef YACCA
+/**
+ * @brief Main faulted "min_array" function with YACCA CFI protection
+ * @param[in] a array1
+ * @param[in] b array2
+ * @param[in] n array size
+ * @param[out] x resulting array
+ * @return uint32_t the YACCA return code 0 or 1
+ * @details computes minimum term by term between arrays a and b and stores 
+ * the result into array x
+ */
 static uint32_t __attribute__ ((noipa,noinline,noclone,section (".yacca"))) min_array(const uint8_t* a, const uint8_t* b, uint8_t* x, int n)
 {
 	volatile bool ERR_CODE;
@@ -122,6 +159,15 @@ static uint32_t __attribute__ ((noipa,noinline,noclone,section (".yacca"))) min_
 	return error;
 }
 
+/**
+ * @brief Call function for the fault scenario min_array with YACCA CFI protection
+ * @param[in] a array1
+ * @param[in] b array2
+ * @param[in] n array size
+ * @param[out] x resulting array
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ * @details Call the min_array function and produces the fault return code
+ */
 uint32_t __attribute__ ((noipa,noinline,noclone,section (".yacca"))) min_array_call(const uint8_t* a, const uint8_t* b, uint8_t* x, int n) {
 	
 	volatile int error = 0;
@@ -144,6 +190,16 @@ uint32_t __attribute__ ((noipa,noinline,noclone,section (".yacca"))) min_array_c
 #ifdef CFICOT
 #undef CFI_FUNC
 #define CFI_FUNC min_array
+/**
+ * @brief Main faulted "min_array" function with CFI protection
+ * @param[in] a array1
+ * @param[in] b array2
+ * @param[in] n array size
+ * @param[out] x resulting array
+ * @return uint16_t the CFI return code (CFI_xxx)
+ * @details computes minimum term by term between arrays a and b and stores 
+ * the result into array x
+ */
 uint16_t __attribute__ ((noipa,noinline,noclone,section (".cficot"))) min_array(const uint8_t* a, const uint8_t* b, uint8_t* x, int n) 
 {
 	volatile int i = 0;
@@ -176,6 +232,15 @@ uint16_t __attribute__ ((noipa,noinline,noclone,section (".cficot"))) min_array(
 
 #undef CFI_FUNC
 #define CFI_FUNC min_array_call
+/**
+ * @brief Call function for the fault scenario min_array with CFI protection
+ * @param[in] a array1
+ * @param[in] b array2
+ * @param[in] n array size
+ * @param[out] x resulting array
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ * @details Call the min_array function and produces the fault return code
+ */
 uint32_t __attribute__ ((noipa,noinline,noclone,section (".cficot"))) min_array_call(const uint8_t* a, const uint8_t* b, uint8_t* x, int n) {
 
 	volatile uint16_t status;

@@ -27,7 +27,12 @@ UBYTE g_countermeasure;
 volatile UBYTE g_userPin[PIN_SIZE];
 UBYTE g_cardPin[PIN_SIZE];
 
-
+/**
+ * @brief initialize the verifyPIN scenario
+ * @details
+ * PWD scenario : Attacker aims to make an inccorect PIN code accepted
+ * CNT scenario : Attacker tries to bypass the maximum number of attempts
+ */
 void initialize()
 {
    // local variables

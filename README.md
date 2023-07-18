@@ -1,5 +1,19 @@
 Source code associated to DSD2023 submission:
 Software-only Control-Flow Integrity against Fault Injection Attacks
+François Bonnal, Vincent Dupaquis, Olivier Potin, Jean-Max Dutertre
+
+Abstract: In this paper, we introduce a new Control-Flow Integrity (CFI) scheme 
+for detecting Fault Injection Attacks (FIA). Our scheme is designed to be as 
+generic as possible and to cover any microcontroller on the market, including 
+non-secure ones. It is a full software approach, designed to detect CFI disruptions 
+caused by FIA. The proposal is portable and designed for a high-level language 
+implementation (C in our case). The main characteristic of our scheme is to link 
+a predictable computed Chain of Trust (CoT) with the assets of a program.
+This approach classically allows the detection of fault injections leading to an 
+illegitimate path of execution.In addition, this solution is designed to detect 
+when a legitimate execution path is wrongly followed due to FIA. Simulations on 
+several benchmarks finally validate the effectiveness of the method, using a 
+multiple instruction skip faults model.
 
 Examples available:
 -switch (Figures 1-5)

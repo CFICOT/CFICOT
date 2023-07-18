@@ -32,6 +32,12 @@ extern UBYTE g_countermeasure;
 extern BOOL g_authenticated;
 extern SBYTE g_ptc;
 
+/**
+ * @brief oracle function, defines the acceptance condition for the PIN code
+ * @return BOOL status of the PIN verification
+ * @details if countermeasure isn't triggerred and authentication is true, 
+ * then the PIN code is accepted
+ */
 BOOL oracle_auth()
 {
     return g_countermeasure != 1 && g_authenticated == BOOL_TRUE;
@@ -40,7 +46,6 @@ BOOL oracle_auth()
 BOOL oracle_ptc()
 {
     return g_countermeasure != 1 && g_authenticated == BOOL_TRUE;
-    //return g_countermeasure != 1 && g_ptc >= 1;
 }
 
 

@@ -1,3 +1,6 @@
+/**
+ * @file FCall fault injection scenario
+ */
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -13,6 +16,12 @@
 typedef uint16_t ret_t;
 volatile uint16_t status_F, status_G;
 
+/**
+ * @brief Dump usefull results to analyze fault scenarios
+ * @param[in] Element variable to be dumped
+ * @return returns Element value or its size
+ * @details Dump chosen variables and their size
+ */
 uint32_t __attribute__((noinline, noclone)) fault_dump(int Element)
 {
 	uint32_t ret;
@@ -30,10 +39,19 @@ uint32_t __attribute__((noinline, noclone)) fault_dump(int Element)
 }
 
 #ifdef NOPROTECTION
+/**
+ * @brief Dummy unprotected function G
+ * @return 1
+ */
 uint16_t __attribute__((noinline,noclone)) Function_G(void) {
 	return 1;
 }
 
+/**
+ * @brief Dummy unprotected function F
+ * @return 1 if G is executed 0 if G's execution is skipped
+ * @details call function G
+ */
 uint16_t __attribute__((noipa, noinline, noclone, section(".noprot"))) Function_F(void){
 	ret_t ret = 0;
 
@@ -42,6 +60,11 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".noprot"))) Function_
 	return ret;
 }
 
+/**
+ * @brief Call function for unprotected scenario
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ * @details call function F and return the resulting fault scenario
+ */
 uint32_t __attribute__((noipa, noinline, noclone, section(".noprot"))) Func_call(void) {
 	ret_t ret =-1;
 
@@ -56,6 +79,12 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".noprot"))) Func_call
 }
 #endif
 
+/**
+ * @brief Dummy protected function G
+ * @param[in] token execution token for conditionnal execution functionnality
+ * @return uint16_t the CFI return code (CFI_xxx)
+ * @details check the token, compute the final status and return it
+ */
 #ifdef CFICOT
 #undef CFI_FUNC
 #define CFI_FUNC Function_G
@@ -76,6 +105,11 @@ uint16_t __attribute__((noinline,noclone, section(".COT"))) Function_G(uint16_t 
 	return status;
 }
 
+/**
+ * @brief Dummy protected function F
+ * @return uint16_t the CFI return code (CFI_xxx)
+ * @details compute the token, call function G and return the CFI status
+ */
 #undef CFI_FUNC
 #define CFI_FUNC Function_F
 uint16_t __attribute__((noipa, noinline, noclone, section(".COT"))) Function_F(void){
@@ -108,6 +142,11 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".COT"))) Function_F(v
 	return status;
 }
 
+/**
+ * @brief Call function for protected scenario
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ * @details call function F and return the resulting fault scenario
+ */
 #undef CFI_FUNC
 #define CFI_FUNC Func_call
 uint32_t __attribute__((noipa, noinline, noclone, section(".COT"))) Func_call(void) {

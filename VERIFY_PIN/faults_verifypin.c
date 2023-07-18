@@ -1,3 +1,6 @@
+/**
+ * @file VerifyPIN fault injection scenario
+ */
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -13,21 +16,37 @@
 #include "VERIFY_PIN/faults_verifypin.cfi.h"
 #endif
 
+/**
+ * @brief VerifyPIN without CFI protection
+ */
 #ifdef VP1
 #include "VerifyPIN_1_HB/include/commons.h"
 BOOL verifyPIN_1(void);
 #endif
 
+/**
+ * @brief VerifyPIN with CFI protection
+ */
 #ifdef VP11
 #include "VerifyPIN_1_HB/include/commons.h"
 uint16_t verifyPIN_11(volatile BOOL *result);
 #endif
 
+/**
+ * @brief VerifyPIN with CFI protection
+ * byteArrayCompare is considered critical
+ * Conditionnal execution is not enabled
+ */
 #ifdef VP31
 #include "VerifyPIN_1_HB/include/commons.h"
 uint16_t verifyPIN_31(volatile BOOL *result);
 #endif
 
+/**
+ * @brief VerifyPIN with CFI protection
+ * byteArrayCompare is considered critical
+ * Conditionnal execution is enabled
+ */
 #ifdef VP32
 #include "VerifyPIN_1_HB/include/commons.h"
 uint16_t verifyPIN_32(volatile BOOL *result);
@@ -36,6 +55,12 @@ uint16_t verifyPIN_32(volatile BOOL *result);
 typedef uint16_t ret_t;
 volatile uint16_t status[5] = {0,0,0,0,0};
 
+/**
+ * @brief Dump usefull results to analyze fault scenarios
+ * @param[in] Element variable to be dumped
+ * @return returns Element value or its size
+ * @details Dump chosen variables and their size
+ */
 uint32_t __attribute__((noinline, noclone)) fault_dump(int Element)
 {
 	uint32_t ret;
@@ -59,6 +84,10 @@ uint32_t __attribute__((noinline, noclone)) fault_dump(int Element)
 }
 
 #ifdef VP1
+/**
+ * @brief VerifyPIN call without CFI protection and fault return code production
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ */
 uint32_t __attribute__((noipa, noinline, noclone, section(".noprot"))) verifypin_call(void)
 {
 	initialize();
@@ -74,6 +103,10 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".noprot"))) verifypin
 #endif
 
 #ifdef VP11
+/**
+ * @brief VerifyPIN call with CFI protection and fault return code production
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ */
 uint32_t __attribute__((noipa, noinline, noclone, section(".cfiCOT"))) verifypin_call(void)
 {
 	initialize();
@@ -92,6 +125,12 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".cfiCOT"))) verifypin
 #endif
 
 #ifdef VP31
+/**
+ * @brief VerifyPIN call with CFI protection and fault return code production
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ * @details byteArrayCompare is considered critical
+ * Conditionnal execution is not enabled
+ */
 uint32_t __attribute__((noipa, noinline, noclone, section(".cfiCOT"))) verifypin_call(void)
 {
 	initialize();
@@ -114,6 +153,12 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".cfiCOT"))) verifypin
 #endif
 
 #ifdef VP32
+/**
+ * @brief VerifyPIN call with CFI protection and fault return code production
+ * @return uint32_t the injection simulation return code (SPUN_xxx)
+ * @details byteArrayCompare is considered critical
+ * Conditionnal execution is not enabled
+ */
 uint32_t __attribute__((noipa, noinline, noclone, section(".cfiCOT"))) verifypin_call(void)
 {
 	initialize();
