@@ -62,19 +62,21 @@ and without CFI protection (memset memcpy memcmp).
 - MIN_ARRAY/faults_CFI_MIN_ARRAY.c: Example code from YACCA's paper compiled
 without any protection with our CFI scheme and with enriched YACCA.
 
-VERIFY_PIN folder:
-VerifyPIN_1_HB is the version number 1 coming from FISSC: the Fault Injection
-and Simulation Secure Collection, it comes with the functionnality
-"HB" Hardenned booleans.
-We compile 2 scenarios of attack:
+#### VERIFY_PIN:
+For each VerifyPIN version, we compile 2 scenarios of attack:
 - "CNT" which starts with a correct PIN but 0 attempt lefts
 - "PWD" which starts with 3 attempts left but an incorrect PIN.
-Version 11 is the protected code of version 1
-version 31 is the same protected code with an additional test to detect the
+
+VerifyPIN versions:
+- VerifyPIN_1_HB is the version number 1 coming from FISSC: the Fault Injection
+and Simulation Secure Collection, it comes with the functionnality
+"HB" Hardenned booleans.
+- Version 11 is the protected code of version 1
+- version 31 is the same protected code with an additional test to detect the
 execution of "byteArrayCompare". as described in section VI-C of the paper
 we don't want the attacker to be able to execute the function at all. with this
 version we found 2 possible FIA which leads to version 32.
-Version 32 protects against these 2 attack scenario with the
+- Version 32 protects against these 2 attack scenario with the
 CFI function GET_SEED (only byteArrayCompare call and seed initialization
 slightly differs from version 31).
 
