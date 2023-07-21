@@ -3,6 +3,11 @@
 
 /**
  * @brief YACCA constants for CFI protection
+ * @details YACCA Yet Another Control-Flow Checking using Assertions
+ * This protection and the example implementing it (min_array) comes from the
+ * following paper:
+ * Improved software-based processor control-flow errors detection technique. 
+ * Goloubeva et al
  */
 const uint32_t __attribute__ ((section (".cfidata"))) B0 = 0x8a3eaa20;
 const uint32_t __attribute__ ((section (".cfidata"))) B1 = 0x1ebd2f13;

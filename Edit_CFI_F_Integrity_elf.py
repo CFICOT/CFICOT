@@ -1,3 +1,7 @@
+# Post compilation script to compute the reference code integrity of a function
+# and store it into the binary (see faults_CFI_MEM.c)
+# the integrity is then dynamically computed during execution and verified
+# through a feed/compensate mechanism
 import sys
 import os
 

@@ -21,7 +21,7 @@ initialize(){
 #Configuration options:
 #Transition function: TFUNC = TFuncCRC, TFuncAfM or TFuncXOR
 TFUNC=${TFUNC:=TFuncXOR}
-#Optimisations: OPT = 0,1,2,3,s
+#Optimizations: OPT = 0,1,2,3,s
 OPT=${OPT:="3"}
 
 initialize

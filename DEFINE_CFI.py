@@ -1,3 +1,18 @@
+# Precomputing script
+# This script read the expanded CFI values macro in each .c file such as 
+# CFI_STEP(n) CFI_TOCOMPENSATE1(n,m,S1,V1) etc... (see CFICOT.h file)
+# The script then computes every value and stores them in .cfi.h files
+#
+# This script is called before the compilation process (see Makefile.am)
+#
+# Example: 
+# file faults_CFI_MIN_ARRAY.c
+# line 226 "CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_CST)"
+# is equal to CFI_TFunc16(status,CFI_TOCOMPENSATE1(0,1,16,CFI_CST))
+# the value name to be expanded is CFI_TOCOMPENSATE1(0,1,16,CFI_CST)
+# this value name is expanded into __CFI_0x7ede_TOCOMPENSATE1_0_1_16_0x176f
+# this script computes the value 0x09d2 with the XOR transition function
+# and store the definition into the file faults_CFI_MIN_ARRAY.cfi.h
 import sys
 
 KEY_CFI = int("0x8eb6",16)

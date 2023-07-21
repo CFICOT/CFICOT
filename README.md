@@ -1,3 +1,5 @@
+# Control-Flow Integrity Chain of Trust CFICOT
+
 This project is associated to the DSD2023 submission of "Software-only Control-Flow Integrity against Fault Injection Attacks"
 by François Bonnal, Vincent Dupaquis, Jean-Max Dutertre and Olivier Potin.
 
@@ -35,11 +37,21 @@ For compiling these examples, you need to have :
 - arm-none-eabi-gcc (download it freely form https://developer.arm.com/downloads/-/gnu-rm)
 - It has been tested with version 9.3.1
 
+How to build the project:
+- OPT=* TFUNC=******** ./COMPILATION.sh
+- OPT = gcc optimisation level
+- TFUNC = CFI Transition function
+
+| Option | values | default |
+| --- | --- | --- |
+OPT | 0,1,2,3,s | 3
+TFUNC | TFuncCRC,TFuncAfM,TFuncXOR | TFuncXOR
+
 ## Files Details:
 
 ### Protection source files
-- src/CFICOT.c and include/CFICOT.h: macros and constants used for the CFI
-protection
+- src/CFICOT.c include/CFISEED.h and include/CFICOT.h: macros and constants used
+for the CFI protection
 - src/crc.c and include/crc.h: generated crc16 code in order to use a crc
 transition function.
 - src/YACCA.c and include/YACCA.h: Alternative CFI protection implementation
