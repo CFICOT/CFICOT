@@ -21,6 +21,7 @@
  * @param x output array
  * @param ref1 reference array
  * @param ref2 reference array
+ * @param CFI_F_Integrity array for binary integrity checking (see Edit_CFI_F_Integrity_elf.py)
  */
 typedef uint16_t ret_t;
 #define LENGTH 10
@@ -546,6 +547,12 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".noprot"))) mem_call(
 }
 #endif
 
+#ifdef CFICOT
+/**
+ * @brief Array for pointer editing (see EDIT_CFI_POINTER.py)
+ */
+volatile const uint32_t __attribute__((section(".CFI_F_Pointer"))) CFI_F_Pointer[5] = {(uintptr_t)sec_mem_set,(uintptr_t)sec_mem_cpy,(uintptr_t)sec_mem_cmp,0,0};
+
 /**
  * @brief Call function for unprotected scenario
  * @param[in] mems mem_set input structure
@@ -554,12 +561,16 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".noprot"))) mem_call(
  * @return uint16_t the CFI return code (CFI_xxx)
  * @details call mem_set mem_cpy and mem_cmp then return the CFI code
  */
-#ifdef CFICOT
 #undef CFI_FUNC
 #define CFI_FUNC mem
 uint16_t __attribute__((noipa, noinline, noclone, section(".mem"))) mem(mem_set_struct *mems, mem_cpy_struct *memcp, mem_cmp_struct *memcm)
 {
 	volatile uint16_t status;
+#ifdef MPOINTER
+	volatile uintptr_t pmset;
+	volatile uintptr_t pmcpy;
+	volatile uintptr_t pmcmp;
+#endif
 
 	if(check_integrity_set(mems) != CFI_TRUE)
 		return CFI_ERROR;
@@ -572,7 +583,12 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".mem"))) mem(mem_set_
 	status = CFI_SET_SEED(status);
 
 	asm("SPUN_mem_set_start:");
+#ifdef MPOINTER
+	pmset = CFI_UNMASK_POINTER(pmset, 0, status, 32, 0);
+	status = CFI_FEED(status, 16, ((memset_f)(pmset))(mems));
+#else
 	status = CFI_FEED(status, 16, sec_mem_set(mems));
+#endif
 	asm("SPUN_mem_set_end:");
 	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(sec_mem_set));
 	status = CFI_CHECK_STEP(status,1);
@@ -580,7 +596,12 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".mem"))) mem(mem_set_
 		return CFI_ERROR;
 	}
 	asm("SPUN_mem_cpy_start:");
+#ifdef MPOINTER
+	pmcpy = CFI_UNMASK_POINTER(pmcpy, 1, status, 32, 1);
+	status = CFI_FEED(status, 16, ((memcpy_f)(pmcpy))(memcp));
+#else
 	status = CFI_FEED(status, 16, sec_mem_cpy(memcp));
+#endif
 	asm("SPUN_mem_cpy_end:");
 	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_FINAL(sec_mem_cpy));
 	status = CFI_CHECK_STEP(status,2);
@@ -588,7 +609,12 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".mem"))) mem(mem_set_
 		return CFI_ERROR;
 	}
 	asm("SPUN_mem_cmp_start:");
+#ifdef MPOINTER
+	pmcmp = CFI_UNMASK_POINTER(pmcmp, 2, status, 32, 2);
+	status = CFI_FEED(status, 16, ((memcmp_f)(pmcmp))(memcm));
+#else
 	status = CFI_FEED(status, 16, sec_mem_cmp(memcm));
+#endif
 	asm("SPUN_mem_cmp_end:");
 	status = CFI_COMPENSATE_STEP1(status, 2, 3, 16, CFI_FINAL(sec_mem_cmp));
 	status = CFI_CHECK_STEP(status,3);
@@ -621,7 +647,7 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 	OPcmp = 1;
 	volatile uint16_t status;
 #ifdef CHECK_BINARY_INTEGRITY
-	volatile uint16_t CRC_integrity = 0, check_integrity = 1;
+	volatile uint16_t CRC_integrity = 0, check_integrity_CRC = 1;
 #endif
 
 	asm("SPUN_mem_call_start:");
@@ -718,9 +744,9 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 
 #ifdef CHECK_BINARY_INTEGRITY
 	CRC_integrity = crc16(CRC_integrity, &__start_section_mem_call, &__stop_section_mem_call - &__start_section_mem_call);
-	check_integrity = CRC_integrity ^ CFI_F_Integrity[0] ^ CFI_CST;
+	check_integrity_CRC = CRC_integrity ^ CFI_F_Integrity[0] ^ CFI_CST;
 
-	status = CFI_FEED(status, 16, check_integrity);
+	status = CFI_FEED(status, 16, check_integrity_CRC);
 	status = CFI_COMPENSATE_STEP1(status, 7, 8, 16, CFI_CST);
 	status = CFI_CHECK_STEP(status,8);
 #else

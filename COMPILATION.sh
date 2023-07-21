@@ -15,6 +15,7 @@ initialize(){
 	autoreconf -fi ..
 	optimization=$OPT ../configure --prefix=$PREFIX --host=$CHOST && make clean && make TFUNC=$TFUNC
 	cd -
+	python3 EDIT_CFI_POINTER.py faults_CFI_MEM
 	python3 Edit_CFI_F_Integrity_elf.py faults_CFI_MEM_COT.elf
 }
 

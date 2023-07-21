@@ -58,11 +58,15 @@ transition function.
 (see Improved software-based processor control-flow errors detection technique.
 Goloubeva et al)
 
-### Preprocessing scripts
+### Python scripts
 - DEFINE_CFI.py preprocessing script for computation of the necessary CFI values
 (stored in .cfi.h files in build directory).
-- Edit_CFI_Integrity_elf.py preprocessing script used to link the integrity of
-MEM_FUNC's binary to its CoT.
+- Edit_CFI_Integrity_elf.py postprocessing script used to link the integrity of
+MEM_FUNC's binary to its CoT. (see faults_CFI_MEM.c) uncomment -DCHECK_BINARY_INTEGRITY
+in Makefile.am line 37 to enable this functionnality
+- EDIT_CFI_POINTER.py postprocessing script used for contextual masking of pointers
+it is applied to mem function (see faults_CFI_MEM.c) uncomment -DMPOINTER in
+Makefile.am line 37 to enable this functionnality
 
 ### Example source code
 - SWITCH/faults_CFI_SWITCH.c: switch case scenario (Figures 1-5) compiled with

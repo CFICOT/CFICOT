@@ -21,7 +21,7 @@ SUFFIXES = .cfi.h .pp
 .c.pp:
 	echo "PREP   $*.c $*.cfi.h -> $@"
 	truncate --size 0 $*.cfi.h
-	$(CC) -E -x c $< -DCFI_PREPROCESS -DCFICOT -DMPOINTER -DVP11 -DVP31 -DVP32 -D${TFUNC} -I${top_srcdir}/include -I${top_srcdir}/VERIFY_PIN/VerifyPIN_1_HB/include -I${top_srcdir}/VERIFY_PIN/share -I. > $@ || (rm $*.cfi.h && false)
+	$(CC) -E -x c $< -DCFI_PREPROCESS -DCFICOT -DMPOINTER -DCHECK_BINARY_INTEGRITY -DVP11 -DVP31 -DVP32 -D${TFUNC} -I${top_srcdir}/include -I${top_srcdir}/VERIFY_PIN/VerifyPIN_1_HB/include -I${top_srcdir}/VERIFY_PIN/share -I. > $@ || (rm $*.cfi.h && false)
 
 
 .pp.cfi.h:
@@ -34,7 +34,7 @@ faults_CFI_MEM_NOPROT_elf_LDADD =
 faults_CFI_MEM_NOPROT_elf_SOURCES = MEM_FUNC/faults_CFI_MEM.c  src/startup.s  src/faults.c  src/crc.c
 EXTRA_faults_CFI_MEM_NOPROT_elf_DEPENDENCIES = ${LinkerDependencies}
 
-faults_CFI_MEM_COT_elf_CFLAGS = -DCFICOT -D${TFUNC} -I${top_srcdir}/include -DMPOINTER
+faults_CFI_MEM_COT_elf_CFLAGS = -DCFICOT -D${TFUNC} -I${top_srcdir}/include #-DMPOINTER -DCHECK_BINARY_INTEGRITY
 faults_CFI_MEM_COT_elf_LDFLAGS = -T ${top_srcdir}/Linker_CortexM.ld 
 faults_CFI_MEM_COT_elf_LDADD =
 faults_CFI_MEM_COT_elf_SOURCES = MEM_FUNC/faults_CFI_MEM.c  src/CFICOT.c  src/startup.s  src/faults.c  src/crc.c

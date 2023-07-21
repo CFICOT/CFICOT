@@ -1,15 +1,12 @@
-# Post compilation script to compute the reference code integrity of a function
-# and store it into the binary (see faults_CFI_MEM.c)
-# the integrity is then dynamically computed during execution and verified
-# through a feed/compensate mechanism
-# uncomment -DCHECK_BINARY_INTEGRITY in Makefile.am line 37 to enable this functionnality
+# Post compilation script to edit (mask) pointers stored into the dedicated section
+# ".CFI_F_Pointer" (see faults_CFI_MEM.c)
+# These pointers are then unmasked through the CFI_UNMASK_POINTER macro
+# uncomment -DMPOINTER in Makefile.am line 37 to enable this functionnality
 import sys
 import os
 
-print(sys.argv[1])
-file1 = open('build' + sys.argv[1], 'w+')
-file2 = open('build/CFI_F_integrity.bin', 'wb')
-
+file1 = open('build/MEM_FUNC/' + sys.argv[1] + '.cfi.h', 'r')
+file2 = open('build/CFI_F_POINTER.bin', 'wb')
 crc_table = [0x0000, 0xc0c1, 0xc181, 0x0140, 0xc301, 0x03c0, 0x0280, 0xc241,
     0xc601, 0x06c0, 0x0780, 0xc741, 0x0500, 0xc5c1, 0xc481, 0x0440,
     0xcc01, 0x0cc0, 0x0d80, 0xcd41, 0x0f00, 0xcfc1, 0xce81, 0x0e40,
@@ -47,22 +44,40 @@ def compute_crc(crc, data, data_len):
     for i in range(data_len):
         tbl_idx = (crc ^ data[i]) & 0xff
         crc = (crc_table[tbl_idx] ^ (crc >> 8)) & 0xffff
+    return crc & 0xffff      
 
-    return crc & 0xffff
+Lines = file1.readlines()
+some_bytes = bytearray(20)
 
-os.system('arm-none-eabi-objcopy -O binary --only-section=section_mem_call "build/faults_CFI_MEM_COT.elf" "build/section_mem_call.bin"')
-file3 = open("build/section_mem_call.bin",'rb')
-data = file3.read()
-data_len = len(data)
-crc_data = 0
-crc_data = compute_crc(crc_data, data, data_len)
+for line in Lines:
+        n = line.find("UNMASK_POINTER")
+        if(n!=-1):
+                #indice = position of the masked pointer in the binary
+                n = line.find("_",n)
+                n = line.find("_",n+1)
+                indice = line[n+1]
 
-some_bytes = bytearray(b'')
-some_bytes = some_bytes + crc_data.to_bytes(2, 'little')
+                p1 = line.find("0x",n)
+                p2 = line.find(" ",p1)
+                mask = int(line[p1:p2],16)
+
+                ret = os.system('arm-none-eabi-objcopy -O binary --only-section=".CFI_F_Pointer" "build/faults_CFI_MEM_COT.elf" "build/section_CFI_F_Pointer.bin"')
+                if ret:
+                    exit(1)
+                #extract data from binary
+                file3 = open("build/section_CFI_F_Pointer.bin",'rb')
+                for i in range(int(indice,10)+1):
+                        data = int.from_bytes(file3.read(4),'little')
+                file3.close()
+                #mask the extracted data
+                data_masked = data ^ mask
+
+                byte_data_masked = data_masked.to_bytes(4, 'little')
+                some_bytes[4*int(indice,10):4*(int(indice,10)+1)] = byte_data_masked
 
 file2.write(some_bytes)
 file2.close()
-
-ret = exit(os.system('arm-none-eabi-objcopy --update-section ".CFI_F_Integrity"="build/CFI_F_integrity.bin" "build/faults_CFI_MEM_COT.elf"'))
+#update the binary with the extracted data
+ret = os.system('arm-none-eabi-objcopy --update-section ".CFI_F_Pointer"="build/CFI_F_POINTER.bin" "build/faults_CFI_MEM_COT.elf"')
 if ret:
     exit(1)
