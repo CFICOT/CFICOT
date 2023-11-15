@@ -326,9 +326,6 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_set"))) sec_
 	status = CFI_FEED(status, 16, check_integrity_set(DMEM));
 	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_TRUE);
 	status = CFI_CHECK_STEP(status,1);
-	if (status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 
 	//additionnal counter
 	j = CFI_access(DMEM->arr->arrsize);
@@ -352,9 +349,6 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_set"))) sec_
 	status = CFI_FEED(status, 16, sum);
 	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
 	status = CFI_CHECK_STEP(status,2);
-	if (status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 	status = CFI_FINAL_STEP(status, 2);
 	status = CFI_CHECK_FINAL(status);
 
@@ -387,9 +381,6 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cpy"))) sec_
 	status = CFI_FEED(status, 16, check_integrity_cpy(DMEM));
 	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_TRUE);
 	status = CFI_CHECK_STEP(status,1);
-	if (status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 
 	if ((DMEM->arrsource->arrsize != DMEM->arrdest->arrsize) || (DMEM->arrsource == DMEM->arrdest)) {
 		return CFI_ERROR;
@@ -416,9 +407,6 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cpy"))) sec_
 	status = CFI_FEED(status, 16, sum);
 	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
 	status = CFI_CHECK_STEP(status,2);
-	if (status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 	status = CFI_FINAL_STEP(status, 2);
 	status = CFI_CHECK_FINAL(status);
 	return status;
@@ -462,9 +450,6 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cmp"))) sec_
 	status = CFI_SET_SEED(status);
 	status = CFI_NEXT_STEP(status,1);
 	status = CFI_CHECK_STEP(status,1);
-	if(status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 
 	if(DMEM->arr1 == DMEM->arr2)
 		return CFI_ERROR;
@@ -498,9 +483,6 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cmp"))) sec_
 	status = CFI_FEED(status, 16, sum);
 	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
 	status = CFI_CHECK_STEP(status,2);
-	if(status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 	status = CFI_FINAL_STEP(status, 2);
 	status = CFI_CHECK_FINAL(status);
 	return status;
@@ -592,9 +574,6 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".mem"))) mem(mem_set_
 	asm("SPUN_mem_set_end:");
 	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(sec_mem_set));
 	status = CFI_CHECK_STEP(status,1);
-	if(status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 	asm("SPUN_mem_cpy_start:");
 #ifdef MPOINTER
 	pmcpy = CFI_UNMASK_POINTER(pmcpy, 1, status, 32, 1);
@@ -605,9 +584,6 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".mem"))) mem(mem_set_
 	asm("SPUN_mem_cpy_end:");
 	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_FINAL(sec_mem_cpy));
 	status = CFI_CHECK_STEP(status,2);
-	if(status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 	asm("SPUN_mem_cmp_start:");
 #ifdef MPOINTER
 	pmcmp = CFI_UNMASK_POINTER(pmcmp, 2, status, 32, 2);
@@ -618,9 +594,6 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".mem"))) mem(mem_set_
 	asm("SPUN_mem_cmp_end:");
 	status = CFI_COMPENSATE_STEP1(status, 2, 3, 16, CFI_FINAL(sec_mem_cmp));
 	status = CFI_CHECK_STEP(status,3);
-	if(status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 
 	status = CFI_FINAL_STEP(status, 3);
 	status = CFI_CHECK_FINAL(status);

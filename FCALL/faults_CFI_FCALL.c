@@ -95,10 +95,6 @@ uint16_t __attribute__((noinline,noclone, section(".COT"))) Function_G(uint16_t 
 
 	status = CFI_NEXT_STEP(status,1);
 	status = CFI_CHECK_STEP(status,1);
-	if (status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
-
 	status = CFI_FINAL_STEP(status,1);
 	status = CFI_CHECK_FINAL(status);
 
@@ -122,19 +118,11 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".COT"))) Function_F(v
 	status_G = Function_G(token);
 
 	status = CFI_FEED(status, 16, status_G);
-
 	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(Function_G));
-
 	status = CFI_CHECK_STEP(status,1);
-	if (status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 
 	status = CFI_NEXT_STEP(status,2);
 	status = CFI_CHECK_STEP(status,2);
-	if (status == CFI_ERROR) {
-		return CFI_ERROR;
-	}
 
 	status = CFI_FINAL_STEP(status,2);
 	status = CFI_CHECK_FINAL(status);
