@@ -638,7 +638,7 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 	if ((tab11.arr != tab1) || 
 			(tab11.arrsize != size)) {
 		status = CFI_ERROR;
-		goto mem_call_check_final;
+		goto mem_call_end;
 	}
 
 	status = CFI_FEED(status, 16, check_integrity(&tab11));
@@ -650,7 +650,7 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 	if ((tab22.arr != tab2) || 
 			(tab22.arrsize != size)) {
 		status = CFI_ERROR;
-		goto mem_call_check_final;
+		goto mem_call_end;
 	}
 
 	status = CFI_FEED(status, 16, check_integrity(&tab22));
@@ -662,7 +662,7 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 	if ((tab33.arr != tab3) || 
 			(tab33.arrsize != size)) {
 		status = CFI_ERROR;
-		goto mem_call_check_final;
+		goto mem_call_end;
 	}
 
 	status = CFI_FEED(status, 16, check_integrity(&tab33));
@@ -673,7 +673,7 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 	mems.integrity = compute_integrity_set(&mems);
 	if ((mems.arr != &tab22) || (CFI_access(mems.cst) != CFI_access(cst))) {
 		status = CFI_ERROR;
-		goto mem_call_check_final;
+		goto mem_call_end;
 	}
 
 	status = CFI_FEED(status, 16, check_integrity_set(&mems));
@@ -685,7 +685,7 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 	if ((CFI_access(memcp.arrdest) != &tab33) || 
 			(CFI_access(memcp.arrsource) != &tab11)) {
 		status = CFI_ERROR;
-		goto mem_call_check_final;
+		goto mem_call_end;
 	} else {
 		memcp.integrity = compute_integrity_cpy(&memcp);
 	}
@@ -701,7 +701,7 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 			(memcm.arr2 != &tab22) || 
 			(memcm.result != &OPcmp)) {
 		status = CFI_ERROR;
-		goto mem_call_check_final;
+		goto mem_call_end;
 	}
 
 	status = CFI_FEED(status, 16, check_integrity_cmp(&memcm));
@@ -713,23 +713,18 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 
 	status = CFI_COMPENSATE_STEP1(status, 6, 7, 16, CFI_FINAL(mem));
 
-	status = CFI_CHECK_STEP(status,7);
-
 #ifdef CHECK_BINARY_INTEGRITY
 	CRC_integrity = crc16(CRC_integrity, &__start_section_mem_call, &__stop_section_mem_call - &__start_section_mem_call);
 	check_integrity_CRC = CRC_integrity ^ CFI_F_Integrity[0] ^ CFI_CST;
 
 	status = CFI_FEED(status, 16, check_integrity_CRC);
 	status = CFI_COMPENSATE_STEP1(status, 7, 8, 16, CFI_CST);
-	status = CFI_CHECK_STEP(status,8);
 #else
 	status = CFI_NEXT_STEP(status,8);
-	status = CFI_CHECK_STEP(status,8);
 #endif
 
 	status = CFI_FINAL_STEP(status, 8);
-mem_call_check_final:
-	status = CFI_CHECK_FINAL(status);
+mem_call_end:
 
 	asm("SPUN_mem_call_end:");
 
