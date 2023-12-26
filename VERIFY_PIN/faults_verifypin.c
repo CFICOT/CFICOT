@@ -95,10 +95,12 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".noprot"))) verifypin
 	asm("SPUN_verifypin_call_start:");
 	verifyPIN_1();
 	asm("SPUN_verifypin_call_end:");
-	if (oracle()) {
+	if (!oracle()) {
+		return SPUN_EXEC_OK;
+    	} else {
 		return SPUN_FAULT_INJECTED;
-    	}
-	return SPUN_EXEC_OK;
+	}
+	
 }
 #endif
 
@@ -115,12 +117,13 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".cfiCOT"))) verifypin
 	asm("SPUN_verifypin_call_start:");
 	status[0] = verifyPIN_11(&result);
 	asm("SPUN_verifypin_call_end:");
-	if (oracle() && (status[0] != CFI_FINAL(verifyPIN_11))) {
-		return SPUN_FAULT_DETECTED;
-	} else if (oracle() && (status[0] == CFI_FINAL(verifyPIN_11))) {
+	if (!oracle()) {
+		return SPUN_EXEC_OK;
+	} else if (status[0] == CFI_FINAL(verifyPIN_11)) {
 		return SPUN_FAULT_INJECTED;
+	} else {
+		return SPUN_FAULT_DETECTED;
 	}
-	return SPUN_EXEC_OK;
 }
 #endif
 
@@ -142,13 +145,16 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".cfiCOT"))) verifypin
 	if (status[0] == CFI_WEXEC) {
 		return SPUN_FAULT_INJECTED;
 	}
-	else if (oracle() && (status[0] == CFI_FINAL(verifyPIN_31))) {
+	else if (!oracle()) {
+		return SPUN_EXEC_OK;
+	}
+	else if (status[0] == CFI_FINAL(verifyPIN_31)) {
 		return SPUN_FAULT_INJECTED;
     	}
-	else if(oracle() && (status[0] != CFI_FINAL(verifyPIN_31))) {
+	else {
 		return SPUN_FAULT_DETECTED;
 	}
-	return SPUN_EXEC_OK;	
+		
 }
 #endif
 
@@ -169,14 +175,15 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".cfiCOT"))) verifypin
 	asm("SPUN_verifypin_call_end:");
 	if (status[0] == CFI_WEXEC) {
 		return SPUN_FAULT_INJECTED;
+	} else if (!oracle()) {
+		return SPUN_EXEC_OK;
 	}
-	else if (oracle() && (status[0] == CFI_FINAL(verifyPIN_32))) {
+	else if (status[0] == CFI_FINAL(verifyPIN_32)) {
 		return SPUN_FAULT_INJECTED;
     	}
-	else if(oracle() && (status[0] != CFI_FINAL(verifyPIN_32))) {
+	else {
 		return SPUN_FAULT_DETECTED;
 	}
-	return SPUN_EXEC_OK;	
 }
 #endif
 

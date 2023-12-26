@@ -91,11 +91,11 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
-      /* cficustom functions */
-  .cficustom :
+      /* cficot functions */
+  .cficot :
   {
     . = ALIGN(4);
-    *(.cficustom*)
+    *(.cficot*)
     . = ALIGN(4);
   } >FLASH
 
@@ -117,11 +117,20 @@ SECTIONS
   } >FLASH
 
     /* CFI data into "FLASH" Rom type memory */
-  .cfidata :
+  .CFI_F_Integrity :
   {
     . = ALIGN(4);
-    *(.cfidata)         /* .rodata sections (constants, strings, etc.) */
-    *(.cfidata*)        /* .rodata* sections (constants, strings, etc.) */
+    *(.CFI_F_Integrity)         /* .rodata sections (constants, strings, etc.) */
+    *(.CFI_F_Integrity*)        /* .rodata* sections (constants, strings, etc.) */
+    . = ALIGN(4);
+  } >FLASH
+
+    /* CFI data into "FLASH" Rom type memory */
+  .CFI_F_Pointer :
+  {
+    . = ALIGN(4);
+    *(.CFI_F_Pointer)         /* .rodata sections (constants, strings, etc.) */
+    *(.CFI_F_Pointer*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
   } >FLASH
 

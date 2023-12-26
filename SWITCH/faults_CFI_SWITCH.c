@@ -206,22 +206,22 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".COT"))) switch_func(
 	uint8_t cipher[16], plaintext2[16];
 	volatile uint16_t status = CFI_ERROR;
 
-	status = CFI_SET_SEED(status);
+	CFI_SET_SEED(status);
 	
-	status = CFI_FEED(status,16,key_size);
+	CFI_FEED(status,16,key_size);
 	switch(key_size){
 		case 256:
 			key = get_key256();
-			status = CFI_COMPENSATE_STEP1(status,0,1,16,256);
+			CFI_COMPENSATE_STEP1(status,0,1,16,256);
 			break;
 		case 128:
 			key = get_key128();
-			status = CFI_COMPENSATE_STEP1(status,0,1,16,128);
+			CFI_COMPENSATE_STEP1(status,0,1,16,128);
 			break;
 		default:
 			goto error_handler;
 	}
-	status = CFI_CHECK_STEP(status,1);
+	CFI_CHECK_STEP(status,1);
 
 	encrypt(key, key_size, plaintext1, cipher);
 	ret = check_integrity_key(key,key_size,key_integrity);
@@ -234,8 +234,8 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".COT"))) switch_func(
 		goto error_handler;
 	}
 
-	status = CFI_FINAL_STEP(status, 1);
-	status = CFI_CHECK_FINAL(status);
+	CFI_FINAL_STEP(status, 1);
+	CFI_CHECK_FINAL(status);
 
 	return status;
 

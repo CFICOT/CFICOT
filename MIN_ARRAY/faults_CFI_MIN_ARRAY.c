@@ -72,9 +72,6 @@ uint32_t __attribute__ ((noinline,noclone)) fault_dump(int Element)
  */
 uint32_t __attribute__ ((noipa,noinline,noclone,section (".noprot"))) min_array_call(const uint8_t* a, const uint8_t* b, uint8_t* x, int n)
 {
-
-	asm("SPUN_min_array_call_start:");
-
 	int i = 0;
 
 	asm("SPUN_min_array_start:");
@@ -90,9 +87,6 @@ uint32_t __attribute__ ((noipa,noinline,noclone,section (".noprot"))) min_array_
 		i ++;
 	}
 	asm("SPUN_min_array_end:");
-
-	asm("SPUN_min_array_call_end:");
-
 
 	if (memcmp(x,ref,sizeof(ref))==0)
 		return SPUN_EXEC_OK;
@@ -172,11 +166,7 @@ uint32_t __attribute__ ((noipa,noinline,noclone,section (".yacca"))) min_array_c
 	
 	volatile int error = 0;
 
-	asm("SPUN_min_array_call_start:");
-
 	error = min_array(a,b,x,n);
-
-	asm("SPUN_min_array_call_end:");
 
 	if (error)
 		return SPUN_FAULT_DETECTED;
@@ -207,7 +197,7 @@ uint16_t __attribute__ ((noipa,noinline,noclone,section (".cficot"))) min_array(
 	volatile uint16_t sum = CFI_CST;
 
 	asm("SPUN_min_array_start:");
-	status = CFI_SET_SEED(status);
+	CFI_SET_SEED(status);
 
 	while(i < n) {
 		if(a[i] < b[i]) {
@@ -222,10 +212,9 @@ uint16_t __attribute__ ((noipa,noinline,noclone,section (".cficot"))) min_array(
 		sum = sum - (uint16_t)CFI_access(x[i]);
 		i++;
 	}
-	status = CFI_FEED(status, 16, sum + n - i);
-	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_CST);
-	status = CFI_FINAL_STEP(status, 1);
-	status = CFI_CHECK_FINAL(status);
+	CFI_FEED(status, 16, sum + n - i);
+	CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_CST);
+	CFI_FINAL_STEP(status, 1);
 	asm("SPUN_min_array_end:");
 	return status;
 }
@@ -245,19 +234,9 @@ uint32_t __attribute__ ((noipa,noinline,noclone,section (".cficot"))) min_array_
 
 	volatile uint16_t status;
 
-	asm("SPUN_min_array_call_start:");
+	status = min_array(a,b,x,n);
 
-	status = CFI_SET_SEED(status);
-
-	status = CFI_FEED(status, 16, min_array(a,b,x,n));
-    
-	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(min_array));
-	status = CFI_FINAL_STEP(status, 1);
-	status = CFI_CHECK_FINAL(status);
-
-	asm("SPUN_min_array_call_end:");
-
-    	if (status == CFI_ERROR)
+    	if (status != CFI_FINAL(min_array))
         	return SPUN_FAULT_DETECTED;
     	else if (memcmp(x,ref,sizeof(ref))==0)
         	return SPUN_EXEC_OK;

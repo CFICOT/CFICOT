@@ -320,12 +320,12 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_set"))) sec_
 	volatile uint16_t status;
 	volatile uint16_t sum = CFI_CST;
 
-	status = CFI_SET_SEED(status);
+	CFI_SET_SEED(status);
 
 	//check the integrity of the structure input
-	status = CFI_FEED(status, 16, check_integrity_set(DMEM));
-	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_TRUE);
-	status = CFI_CHECK_STEP(status,1);
+	CFI_FEED(status, 16, check_integrity_set(DMEM));
+	CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_TRUE);
+	CFI_CHECK_STEP(status,1);
 
 	//additionnal counter
 	j = CFI_access(DMEM->arr->arrsize);
@@ -346,11 +346,11 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_set"))) sec_
 	sum += j;
 	sum ^= i;
 	//check the validity of the sum invariant (it should be equal to CFI_CST)
-	status = CFI_FEED(status, 16, sum);
-	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
-	status = CFI_CHECK_STEP(status,2);
-	status = CFI_FINAL_STEP(status, 2);
-	status = CFI_CHECK_FINAL(status);
+	CFI_FEED(status, 16, sum);
+	CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
+	CFI_CHECK_STEP(status,2);
+	CFI_FINAL_STEP(status, 2);
+	CFI_CHECK_FINAL(status);
 
 	return status;
 }
@@ -375,12 +375,12 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cpy"))) sec_
 	volatile uint16_t status;
 	volatile uint16_t sum = CFI_CST;
 
-	status = CFI_SET_SEED(status);
+	CFI_SET_SEED(status);
 
 	//check the integrity of the structure input
-	status = CFI_FEED(status, 16, check_integrity_cpy(DMEM));
-	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_TRUE);
-	status = CFI_CHECK_STEP(status,1);
+	CFI_FEED(status, 16, check_integrity_cpy(DMEM));
+	CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_TRUE);
+	CFI_CHECK_STEP(status,1);
 
 	if ((DMEM->arrsource->arrsize != DMEM->arrdest->arrsize) || (DMEM->arrsource == DMEM->arrdest)) {
 		return CFI_ERROR;
@@ -404,11 +404,11 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cpy"))) sec_
 	sum += j;
 	sum ^= i;
 	//check the validity of the sum invariant (it should be equal to CFI_CST)
-	status = CFI_FEED(status, 16, sum);
-	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
-	status = CFI_CHECK_STEP(status,2);
-	status = CFI_FINAL_STEP(status, 2);
-	status = CFI_CHECK_FINAL(status);
+	CFI_FEED(status, 16, sum);
+	CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
+	CFI_CHECK_STEP(status,2);
+	CFI_FINAL_STEP(status, 2);
+	CFI_CHECK_FINAL(status);
 	return status;
 }
 
@@ -447,9 +447,9 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cmp"))) sec_
 	
 	*(DMEM->result) = CFI_CST;
 
-	status = CFI_SET_SEED(status);
-	status = CFI_NEXT_STEP(status,1);
-	status = CFI_CHECK_STEP(status,1);
+	CFI_SET_SEED(status);
+	CFI_NEXT_STEP(status,1);
+	CFI_CHECK_STEP(status,1);
 
 	if(DMEM->arr1 == DMEM->arr2)
 		return CFI_ERROR;
@@ -480,11 +480,11 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".sec_mem_cmp"))) sec_
 	sum -= CFI_access(DMEM->arr1->arrsize)*(CFI_access(DMEM->arr1->arrsize)-1)/2;
 	sum += j;
 	sum ^= i;
-	status = CFI_FEED(status, 16, sum);
-	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
-	status = CFI_CHECK_STEP(status,2);
-	status = CFI_FINAL_STEP(status, 2);
-	status = CFI_CHECK_FINAL(status);
+	CFI_FEED(status, 16, sum);
+	CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_CST);
+	CFI_CHECK_STEP(status,2);
+	CFI_FINAL_STEP(status, 2);
+	CFI_CHECK_FINAL(status);
 	return status;
 }
 #endif
@@ -562,41 +562,41 @@ uint16_t __attribute__((noipa, noinline, noclone, section(".mem"))) mem(mem_set_
 		return CFI_ERROR;
 
 
-	status = CFI_SET_SEED(status);
+	CFI_SET_SEED(status);
 
 	asm("SPUN_mem_set_start:");
 #ifdef MPOINTER
 	pmset = CFI_UNMASK_POINTER(pmset, 0, status, 32, 0);
-	status = CFI_FEED(status, 16, ((memset_f)(pmset))(mems));
+	CFI_FEED(status, 16, ((memset_f)(pmset))(mems));
 #else
-	status = CFI_FEED(status, 16, sec_mem_set(mems));
+	CFI_FEED(status, 16, sec_mem_set(mems));
 #endif
 	asm("SPUN_mem_set_end:");
-	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(sec_mem_set));
-	status = CFI_CHECK_STEP(status,1);
+	CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(sec_mem_set));
+	CFI_CHECK_STEP(status,1);
 	asm("SPUN_mem_cpy_start:");
 #ifdef MPOINTER
 	pmcpy = CFI_UNMASK_POINTER(pmcpy, 1, status, 32, 1);
-	status = CFI_FEED(status, 16, ((memcpy_f)(pmcpy))(memcp));
+	CFI_FEED(status, 16, ((memcpy_f)(pmcpy))(memcp));
 #else
-	status = CFI_FEED(status, 16, sec_mem_cpy(memcp));
+	CFI_FEED(status, 16, sec_mem_cpy(memcp));
 #endif
 	asm("SPUN_mem_cpy_end:");
-	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_FINAL(sec_mem_cpy));
-	status = CFI_CHECK_STEP(status,2);
+	CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_FINAL(sec_mem_cpy));
+	CFI_CHECK_STEP(status,2);
 	asm("SPUN_mem_cmp_start:");
 #ifdef MPOINTER
 	pmcmp = CFI_UNMASK_POINTER(pmcmp, 2, status, 32, 2);
-	status = CFI_FEED(status, 16, ((memcmp_f)(pmcmp))(memcm));
+	CFI_FEED(status, 16, ((memcmp_f)(pmcmp))(memcm));
 #else
-	status = CFI_FEED(status, 16, sec_mem_cmp(memcm));
+	CFI_FEED(status, 16, sec_mem_cmp(memcm));
 #endif
 	asm("SPUN_mem_cmp_end:");
-	status = CFI_COMPENSATE_STEP1(status, 2, 3, 16, CFI_FINAL(sec_mem_cmp));
-	status = CFI_CHECK_STEP(status,3);
+	CFI_COMPENSATE_STEP1(status, 2, 3, 16, CFI_FINAL(sec_mem_cmp));
+	CFI_CHECK_STEP(status,3);
 
-	status = CFI_FINAL_STEP(status, 3);
-	status = CFI_CHECK_FINAL(status);
+	CFI_FINAL_STEP(status, 3);
+	CFI_CHECK_FINAL(status);
 
 	return status;
 }
@@ -630,7 +630,7 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 	mem_cpy_struct memcp;
 	mem_cmp_struct memcm;
 
-	status = CFI_SET_SEED(status);
+	CFI_SET_SEED(status);
 
 	tab11.arr = tab1;
 	tab11.arrsize = size;
@@ -641,8 +641,8 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 		goto mem_call_end;
 	}
 
-	status = CFI_FEED(status, 16, check_integrity(&tab11));
-	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_TRUE);
+	CFI_FEED(status, 16, check_integrity(&tab11));
+	CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_TRUE);
 
 	tab22.arr = tab2;
 	tab22.arrsize = size;
@@ -653,8 +653,8 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 		goto mem_call_end;
 	}
 
-	status = CFI_FEED(status, 16, check_integrity(&tab22));
-	status = CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_TRUE);
+	CFI_FEED(status, 16, check_integrity(&tab22));
+	CFI_COMPENSATE_STEP1(status, 1, 2, 16, CFI_TRUE);
 
 	tab33.arr = tab3;
 	tab33.arrsize = size;
@@ -665,8 +665,8 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 		goto mem_call_end;
 	}
 
-	status = CFI_FEED(status, 16, check_integrity(&tab33));
-	status = CFI_COMPENSATE_STEP1(status, 2, 3, 16, CFI_TRUE);
+	CFI_FEED(status, 16, check_integrity(&tab33));
+	CFI_COMPENSATE_STEP1(status, 2, 3, 16, CFI_TRUE);
 
 	mems.arr = &tab22;
 	mems.cst = cst;
@@ -676,8 +676,8 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 		goto mem_call_end;
 	}
 
-	status = CFI_FEED(status, 16, check_integrity_set(&mems));
-	status = CFI_COMPENSATE_STEP1(status, 3, 4, 16, CFI_TRUE);
+	CFI_FEED(status, 16, check_integrity_set(&mems));
+	CFI_COMPENSATE_STEP1(status, 3, 4, 16, CFI_TRUE);
 
 	memcp.arrdest = &tab33;
 	memcp.arrsource = &tab11;
@@ -690,8 +690,8 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 		memcp.integrity = compute_integrity_cpy(&memcp);
 	}
 
-	status = CFI_FEED(status, 16, check_integrity_cpy(&memcp));
-	status = CFI_COMPENSATE_STEP1(status, 4, 5, 16, CFI_TRUE);
+	CFI_FEED(status, 16, check_integrity_cpy(&memcp));
+	CFI_COMPENSATE_STEP1(status, 4, 5, 16, CFI_TRUE);
 
 	memcm.arr1 = &tab33;
 	memcm.arr2 = &tab22;
@@ -704,26 +704,26 @@ uint32_t __attribute__((noipa, noinline, noclone, section("section_mem_call"))) 
 		goto mem_call_end;
 	}
 
-	status = CFI_FEED(status, 16, check_integrity_cmp(&memcm));
-	status = CFI_COMPENSATE_STEP1(status, 5, 6, 16, CFI_TRUE);
+	CFI_FEED(status, 16, check_integrity_cmp(&memcm));
+	CFI_COMPENSATE_STEP1(status, 5, 6, 16, CFI_TRUE);
 
 	asm("SPUN_mem_start:");
-	status = CFI_FEED(status, 16, mem(&mems, &memcp, &memcm));
+	CFI_FEED(status, 16, mem(&mems, &memcp, &memcm));
 	asm("SPUN_mem_end:");
 
-	status = CFI_COMPENSATE_STEP1(status, 6, 7, 16, CFI_FINAL(mem));
+	CFI_COMPENSATE_STEP1(status, 6, 7, 16, CFI_FINAL(mem));
 
 #ifdef CHECK_BINARY_INTEGRITY
 	CRC_integrity = crc16(CRC_integrity, &__start_section_mem_call, &__stop_section_mem_call - &__start_section_mem_call);
 	check_integrity_CRC = CRC_integrity ^ CFI_F_Integrity[0] ^ CFI_CST;
 
-	status = CFI_FEED(status, 16, check_integrity_CRC);
-	status = CFI_COMPENSATE_STEP1(status, 7, 8, 16, CFI_CST);
+	CFI_FEED(status, 16, check_integrity_CRC);
+	CFI_COMPENSATE_STEP1(status, 7, 8, 16, CFI_CST);
 #else
-	status = CFI_NEXT_STEP(status,8);
+	CFI_NEXT_STEP(status,8);
 #endif
 
-	status = CFI_FINAL_STEP(status, 8);
+	CFI_FINAL_STEP(status, 8);
 mem_call_end:
 
 	asm("SPUN_mem_call_end:");

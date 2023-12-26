@@ -20,7 +20,7 @@ uint16_t __attribute__ ((section (".cficustom"))) CFI_TFunc16(uint16_t status, u
 #if defined TFuncXOR
     return status ^ Value;
 #elif defined TFuncAfM
-    return status + Value + 55773;
+    return status + Value + (uint16_t)55773;
 #elif defined TFuncCRC
     uint8_t Values[2];
     Values[0]= (uint8_t)(Value >> 8);

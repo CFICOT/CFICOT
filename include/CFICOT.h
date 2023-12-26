@@ -68,8 +68,8 @@
  * @details if token is equals to the expected seed, satatus is initialized 
  * with token
  */
-#define CFI_GET_SEED(status,TOKEN_SEED) status; if(TOKEN_SEED==CFI_SEED()) \
-status = TOKEN_SEED; else return CFI_ERROR
+#define CFI_GET_SEED(status,TOKEN_SEED) {if(TOKEN_SEED==CFI_SEED()) \
+{status = TOKEN_SEED;} else {return CFI_ERROR;}}
 
 /**
  * @brief Initialize status to seed
@@ -77,7 +77,7 @@ status = TOKEN_SEED; else return CFI_ERROR
  * @return updated status
  * @details Initialize status to the function corresponding seed
  */
-#define CFI_SET_SEED(status) CFI_SEED()
+#define CFI_SET_SEED(status) {status = CFI_SEED();}
 
 /**
  * @brief Increase current CFI step
@@ -86,7 +86,7 @@ status = TOKEN_SEED; else return CFI_ERROR
  * @return updated status
  * @details update status from step n-1 to step n
  */
-#define CFI_NEXT_STEP(status,n) CFI_TFunc16(status,TOSTEP_##n)
+#define CFI_NEXT_STEP(status,n) {status = CFI_TFunc16(status,TOSTEP_##n);}
 
 /**
  * @brief update status with value V
@@ -96,7 +96,7 @@ status = TOKEN_SEED; else return CFI_ERROR
  * @return updated status
  * @details include value V into the computation of the CoT
  */
-#define CFI_FEED(status,S,V) CFI_TFunc##S(status,V)
+#define CFI_FEED(status,S,V) {status = CFI_TFunc##S(status,V);}
 
 /**
  * @brief Final update of the status
@@ -107,7 +107,7 @@ status = TOKEN_SEED; else return CFI_ERROR
  * CFI_TOFINAL(n) such that:
  * CFI_TFunc16(CFI_STEP(n),CFI_TOFINAL(n)) = CFI_TFunc16(CFI_SEED(),CFI_KEY)
  */
-#define CFI_FINAL_STEP(status,n) CFI_TFunc16(status,CFI_TOFINAL(n))
+#define CFI_FINAL_STEP(status,n) {status = CFI_TFunc16(status,CFI_TOFINAL(n));}
 
 /**
  * @brief Compensation of a previously fed value
@@ -121,7 +121,7 @@ status = TOKEN_SEED; else return CFI_ERROR
  * CFI_COMPENSATE(n,m,V...) such that 
  * CFI_TFunc16(status,CFI_COMPENSATE(n,m,V...)) = CFI_STEP(m)
  */
-#define CFI_COMPENSATE_STEP1(status,n,m,S1,V1) CFI_TFunc16(status,CFI_TOCOMPENSATE1(n,m,S1,V1))
+#define CFI_COMPENSATE_STEP1(status,n,m,S1,V1) {status = CFI_TFunc16(status,CFI_TOCOMPENSATE1(n,m,S1,V1));}
 
 /**
  * @brief Compensation of 2 previously fed values
@@ -137,7 +137,7 @@ status = TOKEN_SEED; else return CFI_ERROR
  * CFI_COMPENSATE(n,m,V...) such that 
  * CFI_TFunc16(status,CFI_COMPENSATE(n,m,V...)) = CFI_STEP(m)
  */
-#define CFI_COMPENSATE_STEP2(status,n,m,S1,V1,S2,V2) CFI_TFunc16(status,CFI_TOCOMPENSATE2(n,m,S1,V1,S2,V2))
+#define CFI_COMPENSATE_STEP2(status,n,m,S1,V1,S2,V2) {status = CFI_TFunc16(status,CFI_TOCOMPENSATE2(n,m,S1,V1,S2,V2));}
 
 /**
  * @brief Verify status
@@ -146,8 +146,8 @@ status = TOKEN_SEED; else return CFI_ERROR
  * @return updated status
  * @details verify that status is equal to the expected n th step value
  */
-#define CFI_CHECK_STEP(status,n) status; if(status != CFI_STEP(n)) \
-return CFI_ERROR
+#define CFI_CHECK_STEP(status,n) {if(status != CFI_STEP(n)) \
+{status = CFI_ERROR; return CFI_ERROR;}}
 
 /**
  * @brief Verify status
@@ -155,8 +155,8 @@ return CFI_ERROR
  * @return updated status
  * @details verify that status is equal to the expected final step value
  */
-#define CFI_CHECK_FINAL(status) status; if(status != CFI_TFunc16(CFI_SEED(),CFI_KEY)) \
-return CFI_ERROR
+#define CFI_CHECK_FINAL(status) {if(status != CFI_TFunc16(CFI_SEED(),CFI_KEY)) \
+{status = CFI_ERROR; return CFI_ERROR;}}
 
 /**
  * @brief contextual masking
@@ -166,7 +166,7 @@ return CFI_ERROR
  * @return masked data
  * @details apply the mask to data, mask and data are identified through name and size
  */
-#define CFI_MASK(data,name,size) (data) ^ (__CFI_MASK_##size##_##name)
+#define CFI_MASK(data,name,size) ((data) ^ (__CFI_MASK_##size##_##name))
 
 /**
  * @brief contextual unmasking
@@ -177,7 +177,7 @@ return CFI_ERROR
  * @return unmasked data
  * @details unmask the Mdata under the condition that the CoT takes it's expected value
  */
-#define CFI_UNMASK(Mdata,status,size,n) (Mdata) ^ (status) ^ (CFI_MRG(CFI_SEED(),UNMASK_##n##_##size##_##Mdata))
+#define CFI_UNMASK(Mdata,status,size,n) ((Mdata) ^ (status) ^ (CFI_MRG(CFI_SEED(),UNMASK_##n##_##size##_##Mdata)))
 
 /**
  * @brief contextual unmasking
@@ -190,7 +190,7 @@ return CFI_ERROR
  * @details Unmask the address stored in CFI_F_Pointer[indice] under the 
  * condition that the CoT takes it's expected value
  */
-#define CFI_UNMASK_POINTER(MPointer,indice,status,size,n) (CFI_F_Pointer[indice]) ^ (status) ^ (CFI_MRG(CFI_SEED(),UNMASK_POINTER_##n##_##size##_##indice##_##MPointer))
+#define CFI_UNMASK_POINTER(MPointer,indice,status,size,n) ((CFI_F_Pointer[indice]) ^ (status) ^ (CFI_MRG(CFI_SEED(),UNMASK_POINTER_##n##_##size##_##indice##_##MPointer)))
 
 /**
  * @brief Transition function

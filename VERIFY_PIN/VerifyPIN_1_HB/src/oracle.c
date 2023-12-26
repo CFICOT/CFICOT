@@ -40,12 +40,12 @@ extern SBYTE g_ptc;
  */
 BOOL oracle_auth()
 {
-    return g_countermeasure != 1 && g_authenticated == BOOL_TRUE;
+    return (g_countermeasure != BOOL_TRUE) && (g_authenticated == BOOL_TRUE);
 }
 
 BOOL oracle_ptc()
 {
-    return g_countermeasure != 1 && g_authenticated == BOOL_TRUE;
+    return (g_countermeasure != BOOL_TRUE) && (g_authenticated == BOOL_TRUE);
 }
 
 

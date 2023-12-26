@@ -91,12 +91,12 @@ uint32_t __attribute__((noipa, noinline, noclone, section(".noprot"))) Func_call
 uint16_t __attribute__((noinline,noclone, section(".COT"))) Function_G(uint16_t token) {
 	volatile uint16_t status = CFI_ERROR;
 
-	status = CFI_GET_SEED(status,token);
+	CFI_GET_SEED(status,token);
 
-	status = CFI_NEXT_STEP(status,1);
-	status = CFI_CHECK_STEP(status,1);
-	status = CFI_FINAL_STEP(status,1);
-	status = CFI_CHECK_FINAL(status);
+	CFI_NEXT_STEP(status,1);
+	CFI_CHECK_STEP(status,1);
+	CFI_FINAL_STEP(status,1);
+	CFI_CHECK_FINAL(status);
 
 	return status;
 }
@@ -111,21 +111,21 @@ uint16_t __attribute__((noinline,noclone, section(".COT"))) Function_G(uint16_t 
 uint16_t __attribute__((noipa, noinline, noclone, section(".COT"))) Function_F(void){
 	volatile uint16_t status, token;
 
-	status = CFI_SET_SEED(status);
+	CFI_SET_SEED(status);
 
 	token = status ^ _CFI_SEED(Function_G) ^ _CFI_SEED(Function_F);
 
 	status_G = Function_G(token);
 
-	status = CFI_FEED(status, 16, status_G);
-	status = CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(Function_G));
-	status = CFI_CHECK_STEP(status,1);
+	CFI_FEED(status, 16, status_G);
+	CFI_COMPENSATE_STEP1(status, 0, 1, 16, CFI_FINAL(Function_G));
+	CFI_CHECK_STEP(status,1);
 
-	status = CFI_NEXT_STEP(status,2);
-	status = CFI_CHECK_STEP(status,2);
+	CFI_NEXT_STEP(status,2);
+	CFI_CHECK_STEP(status,2);
 
-	status = CFI_FINAL_STEP(status,2);
-	status = CFI_CHECK_FINAL(status);
+	CFI_FINAL_STEP(status,2);
+	CFI_CHECK_FINAL(status);
 
 	return status;
 }
